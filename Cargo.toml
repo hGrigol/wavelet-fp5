@@ -1,0 +1,7 @@
+[package]
+name = "wavelet5"
+version = "0.1.0"
+authors = ["grigol00"]
+edition = "2018"
+
+[dependencies]
