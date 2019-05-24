@@ -5,3 +5,10 @@ authors = ["grigol00"]
 edition = "2018"
 
 [dependencies]
+
+itertools = "0.8.0"
+derive-new = "0.5.6"
+derive_builder = "0.7.1"
+bio = "*"
+bv = { version = "0.10", features = ["serde"] }
+snafu = "0.4.1"
