@@ -33,7 +33,7 @@ impl<T> WaveletTree <T>
     WaveletTree{alphabet:vec.clone(), root: Some(Box::new(BinNode::create_node(vec,seqvec)))}
   }
 
- fn access (&self,index : usize) -> Result<T, &'static str>{
+ pub fn access (&self,index : usize) -> Result<T, &'static str>{
       let z = match &self.root{
 
 		      Some(x) => x.access(index as u64,&self.alphabet,0,self.alphabet.len()-1),
@@ -49,7 +49,21 @@ impl<T> WaveletTree <T>
  }
  //fn select (symbol:<T as std::iter::IntoIterator>::Item, index : usize) -> usize{}
  
-  
+  pub fn rank<E> (&self,character : E,index : usize) -> Result<u64,&'static str>{	
+	let character_index = 5; //TODO stelle im alphabet herausfinden	
+	let result = match &self.root {
+
+		Some(x) => (*x).rank(index as u64,&self.alphabet,character_index,0,&self.alphabet.len()-1),
+		None => return Err("Element nicht gefunden"),
+	};		
+	match result {
+				
+		Some(x) => Ok(x),
+		None => return Err("Element nicht gefunden"),	
+	}
+
+
+  }  
 
 }
 
@@ -111,9 +125,56 @@ impl BinNode{
   }
 
   //fn select (symbol:<T as std::iter::IntoIterator>::Item, index : usize) -> usize{}
-  
+
+
+
+  fn rank<E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : usize, min : usize ,max : usize) -> Option<u64>{
+	if min == max { return Some(index+1)} //Wenn im blatt 
+	else{
+		if character <= (max+min)/2	    		//unsicher ob <= oder <
+		{
+			let next_index=self.value.rank_0((index-1) as u64).unwrap();
+			match &self.right{
+				Some(x)=> return (*x).rank(next_index,alphabet,character,min,(min+max)/2),
+				None => return None
+			}
+		}
+		else{
+			let next_index=self.value.rank((index-1) as u64).unwrap();
+			match &self.left{
+				Some(x)=> return (*x).rank(next_index,alphabet,character,((min+max)/2)+1,max),
+				None => return None
+			}
+	
+		}
+	}    
+	
+  }
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
