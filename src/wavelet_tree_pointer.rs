@@ -35,7 +35,18 @@ impl<T> WaveletTree <T>
   }
 
  pub fn access (&self,index : usize) -> Result<T, &'static str>{
-      let z = match &self.root{
+    
+	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
+	let z = match &self.root{
+		Some(x) => x,
+		None => return Err("Fehler bei root unwrap in access"),
+	};
+	if z.value.bits().len() <= index as u64{
+		return Err("Index größer als Sequenz, Fehler bei access");
+	}
+
+	//-------------------------------------------	
+    let z = match &self.root{
 
 		      Some(x) => x.access(index as u64,&self.alphabet,0,self.alphabet.len()-1),
 		      None =>return Err("Element nicht gefunden"),   //TODO snafu Fehler implementieren
@@ -49,10 +60,17 @@ impl<T> WaveletTree <T>
          
  }
  pub fn select (&self,character : T,index : usize) -> Result<u64,&'static str>{
+
+	// Abfangen von fehlerhafter Eingabe, Index darf hier nicht 0 sein
+	if index <= 0 {
+		return Err("Eingabe darf bei select nicht kleiner als 1 sein");
+	}
+
+	//------------------------
 	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
-		Err(_) => return Ok(100000), //TODO  element nicht in alphabet 
+		Err(_) => return Err("Element nicht im Alphabet, Fehler bei select"), //TODO  element nicht in alphabet 
 	};	
 	let result = match &self.root {
 		Some(x) => x.select(index as u64,&self.alphabet,character_index,0,self.alphabet.len()-1),
@@ -65,7 +83,18 @@ impl<T> WaveletTree <T>
 
 }
  
-  pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{	
+  pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{
+	
+	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
+	let z = match &self.root{
+		Some(x) => x,
+		None => return Err("Fehler bei root unwrap in select"),
+	};
+	if z.value.bits().len() <= index as u64{
+		return Err("Index größer als Sequenz");
+	}	
+
+	//---------------------------------
 	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
@@ -151,7 +180,9 @@ impl BinNode{
   }
 
   fn select <E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<(u64)>{
-	if min==max{return Some(index-1);}
+	//Blatt erreicht	
+	if min==max{return Some(index-1);} // Position wird in Index umgerechnet, da Eingabe mit Position erfolgt
+
 	else{
 		if character <= &((max+min)/2){
 			
@@ -163,7 +194,7 @@ impl BinNode{
 				Some(x) => x,
 				None => return None,
 			};
-			return self.value.select_0(new_index+1);
+			return self.value.select_0(new_index+1); //+1 da Index in Position umgerechnet wird
 			
 
 		}
@@ -177,7 +208,7 @@ impl BinNode{
 				Some(x) => x,
 				None => return None,
 			};
-			return self.value.select_1(new_index+1);
+			return self.value.select_1(new_index+1); //+1 da Index in Position umgerechnet wird
 		
 		}
 			    				
