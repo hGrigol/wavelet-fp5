@@ -94,7 +94,7 @@ impl BinNode{
             let mut sequence1 = Vec::new();
             let mut sequence2 = Vec::new();
             //Es werden alle Elemente der Sequenz durchegangen
-            for x in 0..sequence.len()-1{
+            for x in 0..(sequence.len()){
                 //wenn sie in der 2. Hälfte des Alphabets sind wird ihr Eintrag in der Bitmap auf 1 gesetzt
                 if alphabet2.contains(&sequence[x]){
                 value.set_bit(x as u64,true)} 
@@ -104,9 +104,11 @@ impl BinNode{
                 //neue Sequencen werden anhand der Keys gebaut
                 if key {sequence1.extend(group)} else {sequence2.extend(group)}
             }
-			println!("alphabet1 : {}",alphabet.len());
+			/*println!("alphabet1 : {}",alphabet.len());
 			println!("alphabet2 : {}",alphabet2.len());
-			
+			println!("{:?}",value);
+			println!("-------------------------");
+			*/
 
             BinNode{value: RankSelect::new(value,1),left: Some(Box::new(BinNode::create_node(alphabet,sequence1))), right:Some(Box::new(BinNode::create_node(alphabet2,sequence2)))}
         }
@@ -116,17 +118,17 @@ impl BinNode{
       if min == max { return Some(alphabet[min]);}
       else{
 		  
-		  if self.value.get((index-1) as u64) { 
-		      let next_index = self.value.rank((index-1) as u64).unwrap();
+		  if self.value.get((index) as u64) { 
+		      let next_index = self.value.rank((index) as u64).unwrap();
 		      match &self.right{
-		      Some(x) => return (*x).access(next_index,alphabet,1+(min+max)/2,max),
+		      Some(x) => return (*x).access(next_index-1,alphabet,1+(min+max)/2,max),
 		      None =>return None,   //TODO snafu Fehler implementieren
 		      }
 		  }
 		  else {
-		      let next_index = self.value.rank_0((index-1) as u64).unwrap();
+		      let next_index = self.value.rank_0((index) as u64).unwrap();
 		      match &self.left{
-		      Some(x) =>return (*x).access(next_index,alphabet,min,(min+max)/2),
+		      Some(x) =>return (*x).access(next_index-1,alphabet,min,(min+max)/2),
 		      None => return None,   //TODO snafu Fehler implementieren
 		      }
 		  }
@@ -138,21 +140,21 @@ impl BinNode{
 
 
   fn rank<E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<u64>{
-	println!("index:{}",index);
+	//println!("index:{}",index);
 	if min == max { return Some(index+1)} //Wenn im blatt 
 	else{
 		if character <= &((max+min)/2)	    		
 		{
 			let next_index=self.value.rank_0((index) as u64).unwrap();
 			match &self.left{
-				Some(x)=> return (*x).rank(next_index,alphabet,character,min,(min+max)/2),
+				Some(x)=> return (*x).rank(next_index-1,alphabet,character,min,(min+max)/2),
 				None => return None
 			}
 		}
 		else{
 			let next_index=self.value.rank((index) as u64).unwrap();
 			match &self.right{
-				Some(x)=> return (*x).rank(next_index,alphabet,character,((min+max)/2)+1,max),
+				Some(x)=> return (*x).rank(next_index-1,alphabet,character,((min+max)/2)+1,max),
 				None => return None
 			}
 	
