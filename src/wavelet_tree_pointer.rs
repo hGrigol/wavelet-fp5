@@ -48,13 +48,28 @@ impl<T> WaveletTree <T>
      }
          
  }
- //fn select (symbol:<T as std::iter::IntoIterator>::Item, index : usize) -> usize{}
+ pub fn select (&self,character : T,index : usize) -> Result<u64,&'static str>{
+	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
+	let character_index = match character_index1  {
+		Ok(x)  => x ,
+		Err(_) => return Ok(100000), //TODO  element nicht in alphabet 
+	};	
+	let result = match &self.root {
+		Some(x) => x.select(index as u64,&self.alphabet,character_index,0,self.alphabet.len()-1),
+		None => return Err("Fehler"),
+	};
+	match result {
+		Some(x)=> return Ok(x),
+		None => return Err("Fehler bei select"),
+	} 	
+
+}
  
   pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{	
 	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
-		Err(_) => return Ok(0), //TODO in 0 ändern // element nicht in alphabet => gib 0 zurück 
+		Err(_) => return Ok(0),  //element nicht in alphabet => gib 0 zurück 
 	};
 	let result = match &self.root {
 
@@ -135,7 +150,43 @@ impl BinNode{
     }
   }
 
-  //fn select (symbol:<T as std::iter::IntoIterator>::Item, index : usize) -> usize{}
+  fn select <E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<(u64)>{
+	if min==max{return Some(index-1);}
+	else{
+		if character <= &((max+min)/2){
+			
+			let result = match &self.left {
+				Some(x) => (*x).select(index,alphabet,character,min,(min+max)/2),
+				None => return None,
+			};
+			let new_index = match result {
+				Some(x) => x,
+				None => return None,
+			};
+			return self.value.select_0(new_index+1);
+			
+
+		}
+		else{
+		
+			let result = match &self.right{
+				Some(x) => (*x).select(index,alphabet,character,(min+max)/2 +1,max),
+				None => return None,
+			};
+			let new_index = match result {
+				Some(x) => x,
+				None => return None,
+			};
+			return self.value.select_1(new_index+1);
+		
+		}
+			    				
+		
+		
+
+		
+	}
+	}
 
 
 
@@ -145,6 +196,7 @@ impl BinNode{
 	else{
 		if character <= &((max+min)/2)	    		
 		{
+			
 			let next_index=self.value.rank_0((index) as u64).unwrap();
 			match &self.left{
 				Some(x)=> return (*x).rank(next_index-1,alphabet,character,min,(min+max)/2),
