@@ -1,13 +1,15 @@
 #[macro_use] extern crate derive_builder;
 mod wavelet_tree_pointer;
 fn main() {
-    let tree = wavelet_tree_pointer::WaveletTree::create_tree("aaaakkkeeeaallleemdaat".chars());;
-//	let z = tree.access(21);
-//	let z= tree.rank('a',15);
-	let z= tree.select('l',0);
+
+    let tree = wavelet_tree_pointer::WaveletTree::create_tree("aba cdef".chars());;
+	let z = tree.access(10);
+//	let z= tree.rank('a',3);
+//	let z = tree.select('a',3);
+
 	match z{
 	Ok(x) => println!("a kommt {} mal vor",x),
-	Err(_)=> println!("a kommt nicht vor"),
+	Err(z)=> println!("{}", z),
 	}
 
 //	let z= tree.rank('b',5);
