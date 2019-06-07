@@ -30,7 +30,8 @@ impl<T> WaveletTree <T>
     vec.extend(sequence.into_iter().unique());
     vec.sort();
     println!("{:?}",vec);
-    WaveletTree{alphabet:vec.clone(), root: Some(Box::new(BinNode::create_node(vec,seqvec)))}
+	let vec2 =vec.clone();
+    WaveletTree{alphabet: vec2, root: Some(Box::new(BinNode::create_node(vec,seqvec)))}
   }
 
  pub fn access (&self,index : usize) -> Result<T, &'static str>{
@@ -49,8 +50,12 @@ impl<T> WaveletTree <T>
  }
  //fn select (symbol:<T as std::iter::IntoIterator>::Item, index : usize) -> usize{}
  
-  pub fn rank<E> (&self,character : E,index : usize) -> Result<u64,&'static str>{	
-	let character_index = 5; //TODO stelle im alphabet herausfinden	
+  pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{	
+	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
+	let character_index = match character_index1  {
+		Ok(x)  => x ,
+		Err(_) => return Ok(0), //TODO in 0 ändern // element nicht in alphabet => gib 0 zurück 
+	};
 	let result = match &self.root {
 
 		Some(x) => (*x).rank(index as u64,&self.alphabet,character_index,0,&self.alphabet.len()-1),
@@ -58,7 +63,7 @@ impl<T> WaveletTree <T>
 	};		
 	match result {
 				
-		Some(x) => Ok(x),
+		Some(x) => return Ok(x),
 		None => return Err("Element nicht gefunden"),	
 	}
 
@@ -82,9 +87,9 @@ impl BinNode{
         }
         else{
             let mut value = BitVec::new_fill(false,count as u64);
-            let mid = alphabet.len()/2;
+            let mid = (alphabet.len()+1)/2;
             //Das Alphabet wird geteilt, die 2. Hälfte wird in alphabet2 gespeichert
-            let alphabet2 = alphabet.split_off(mid+1);
+            let alphabet2 = alphabet.split_off(mid);//TODO eigentlich mid+1,aber dann stack overflow?
             //Die Sequenzen für den nächsten Schritt
             let mut sequence1 = Vec::new();
             let mut sequence2 = Vec::new();
@@ -99,6 +104,10 @@ impl BinNode{
                 //neue Sequencen werden anhand der Keys gebaut
                 if key {sequence1.extend(group)} else {sequence2.extend(group)}
             }
+			println!("alphabet1 : {}",alphabet.len());
+			println!("alphabet2 : {}",alphabet2.len());
+			
+
             BinNode{value: RankSelect::new(value,1),left: Some(Box::new(BinNode::create_node(alphabet,sequence1))), right:Some(Box::new(BinNode::create_node(alphabet2,sequence2)))}
         }
     }
@@ -128,20 +137,21 @@ impl BinNode{
 
 
 
-  fn rank<E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : usize, min : usize ,max : usize) -> Option<u64>{
+  fn rank<E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<u64>{
+	println!("index:{}",index);
 	if min == max { return Some(index+1)} //Wenn im blatt 
 	else{
-		if character <= (max+min)/2	    		//unsicher ob <= oder <
+		if character <= &((max+min)/2)	    		
 		{
-			let next_index=self.value.rank_0((index-1) as u64).unwrap();
-			match &self.right{
+			let next_index=self.value.rank_0((index) as u64).unwrap();
+			match &self.left{
 				Some(x)=> return (*x).rank(next_index,alphabet,character,min,(min+max)/2),
 				None => return None
 			}
 		}
 		else{
-			let next_index=self.value.rank((index-1) as u64).unwrap();
-			match &self.left{
+			let next_index=self.value.rank((index) as u64).unwrap();
+			match &self.right{
 				Some(x)=> return (*x).rank(next_index,alphabet,character,((min+max)/2)+1,max),
 				None => return None
 			}
