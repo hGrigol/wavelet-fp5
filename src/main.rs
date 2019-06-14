@@ -1,5 +1,6 @@
 #[macro_use] extern crate derive_builder;
 mod wavelet_tree_pointer;
+mod wavelet_graph;
 fn main() {
 
     let tree = wavelet_tree_pointer::WaveletTree::create_tree("aba cdef".chars().into_iter());;
