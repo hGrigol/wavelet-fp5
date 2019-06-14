@@ -7,6 +7,7 @@ use std::fmt::Debug;
 
 
 
+
 pub struct WaveletTree<E>{
     alphabet:Vec<E>,
     root: Option<Box<BinNode>>,
@@ -24,10 +25,10 @@ pub struct BinNode {
 impl<T> WaveletTree <T>
  where T: Hash+Clone+Ord+Debug+Copy{
 
-  pub fn create_tree<S:Clone+IntoIterator<Item=T>>(sequence: S) -> WaveletTree<T>{
-    let seqvec = sequence.clone().into_iter().collect::<Vec<_>>();
+  pub fn create_tree<S:Clone+Iterator<Item=T>>(sequence: S) -> WaveletTree<T>{
+    let seqvec = sequence.clone().collect::<Vec<_>>();
     let mut vec = Vec::new();
-    vec.extend(sequence.into_iter().unique());
+    vec.extend(sequence.unique());
     vec.sort();
     println!("{:?}",vec);
 	let vec2 =vec.clone();
@@ -73,11 +74,11 @@ impl<T> WaveletTree <T>
 		Err(_) => return Err("Element nicht im Alphabet, Fehler bei select"), //TODO  element nicht in alphabet 
 	};	
 	let result = match &self.root {
-		Some(x) => x.select(index as u64,&self.alphabet,character_index,0,self.alphabet.len()-1),
+		Some(x) => x.select(index as u64,character_index,0,self.alphabet.len()-1),
 		None => return Err("Fehler"),
 	};
 	match result {
-		Some(x)=> return Ok(x),
+		Some(x)=> return Ok(x+1),
 		None => return Err("Fehler bei select"),
 	} 	
 
@@ -85,7 +86,11 @@ impl<T> WaveletTree <T>
  
   pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{
 	
+    if index<1 {
+        return Ok(0);
+    }
 	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
+    let index = index-1;
 	let z = match &self.root{
 		Some(x) => x,
 		None => return Err("Fehler bei root unwrap in select"),
@@ -95,14 +100,14 @@ impl<T> WaveletTree <T>
 	}	
 
 	//---------------------------------
-	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
+	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index das gesuchte zeichen im alphabet steht 
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
 		Err(_) => return Ok(0),  //element nicht in alphabet => gib 0 zurück 
 	};
 	let result = match &self.root {
 
-		Some(x) => (*x).rank(index as u64,&self.alphabet,character_index,0,&self.alphabet.len()-1),
+		Some(x) => (*x).rank(index as u64,character_index,0,&self.alphabet.len()-1),
 		None => return Err("Element nicht gefunden"),
 	};		
 	match result {
@@ -179,7 +184,7 @@ impl BinNode{
     }
   }
 
-  fn select <E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<(u64)>{
+  fn select(&self,index : u64,character : &usize, min : usize ,max : usize) -> Option<(u64)>{
 	//Blatt erreicht	
 	if min==max{return Some(index-1);} // Position wird in Index umgerechnet, da Eingabe mit Position erfolgt
 
@@ -187,7 +192,7 @@ impl BinNode{
 		if character <= &((max+min)/2){
 			
 			let result = match &self.left {
-				Some(x) => (*x).select(index,alphabet,character,min,(min+max)/2),
+				Some(x) => (*x).select(index,character,min,(min+max)/2),
 				None => return None,
 			};
 			let new_index = match result {
@@ -201,7 +206,7 @@ impl BinNode{
 		else{
 		
 			let result = match &self.right{
-				Some(x) => (*x).select(index,alphabet,character,(min+max)/2 +1,max),
+				Some(x) => (*x).select(index,character,(min+max)/2 +1,max),
 				None => return None,
 			};
 			let new_index = match result {
@@ -221,7 +226,7 @@ impl BinNode{
 
 
 
-  fn rank<E:Hash+Clone+Ord+Debug+Copy> (&self,index : u64,alphabet: &Vec<E>,character : &usize, min : usize ,max : usize) -> Option<u64>{
+  fn rank(&self,index : u64,character : &usize, min : usize ,max : usize) -> Option<u64>{
 	//println!("index:{}",index);
 	if min == max { return Some(index+1)} //Wenn im blatt 
 	else{
@@ -230,14 +235,14 @@ impl BinNode{
 			
 			let next_index=self.value.rank_0((index) as u64).unwrap();
 			match &self.left{
-				Some(x)=> return (*x).rank(next_index-1,alphabet,character,min,(min+max)/2),
+				Some(x)=> return (*x).rank(next_index-1,character,min,(min+max)/2),
 				None => return None
 			}
 		}
 		else{
 			let next_index=self.value.rank((index) as u64).unwrap();
 			match &self.right{
-				Some(x)=> return (*x).rank(next_index-1,alphabet,character,((min+max)/2)+1,max),
+				Some(x)=> return (*x).rank(next_index-1,character,((min+max)/2)+1,max),
 				None => return None
 			}
 	

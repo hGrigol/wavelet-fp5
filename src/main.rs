@@ -2,15 +2,15 @@
 mod wavelet_tree_pointer;
 fn main() {
 
-    let tree = wavelet_tree_pointer::WaveletTree::create_tree("aba cdef".chars());;
-	let z = tree.access(6);
-//	let z= tree.rank('a',3);
-//	let z = tree.select('a',3);
+    let tree = wavelet_tree_pointer::WaveletTree::create_tree("aba cdef".chars().into_iter());;
+	//let z = tree.access(6);
+ 	//let z= tree.rank('a',2);
+	let z = tree.select(' ',1);
 
 	match z{
 	Ok(x) => println!("a kommt {} mal vor",x),
 	Err(z)=> println!("{}", z),
-	}
+   }
 
 //	let z= tree.rank('b',5);
 //	match z{
