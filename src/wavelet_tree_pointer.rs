@@ -72,7 +72,18 @@ impl<T> WaveletTree <T>
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
 		Err(_) => return Err("Element nicht im Alphabet, Fehler bei select"), //TODO  element nicht in alphabet 
-	};	
+	};
+
+	//Abfangen dass der Buchstabe nicht index oft vorkommt
+    let z = match &self.root{
+		Some(x) => x,
+		None => return Err("Fehler bei root unwrap in access"),
+	};
+	if &self.rank(character,z.value.bits().len() as usize).unwrap() < &(index as u64){
+		return Err("Das Symbol kommt nicht oft genug im Wort vor");
+	}
+
+
 	let result = match &self.root {
 		Some(x) => x.select(index as u64,character_index,0,self.alphabet.len()-1),
 		None => return Err("Fehler"),
@@ -89,12 +100,12 @@ impl<T> WaveletTree <T>
     if index<1 {
         return Ok(0);
     }
-	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
     let index = index-1;
 	let z = match &self.root{
 		Some(x) => x,
 		None => return Err("Fehler bei root unwrap in select"),
 	};
+    // Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
 	if z.value.bits().len() <= index as u64{
 		return Err("Index größer als Sequenz");
 	}	
