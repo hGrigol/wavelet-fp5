@@ -36,7 +36,9 @@ impl<T> WaveletTree <T>
   }
 
  pub fn access (&self,index : usize) -> Result<T, &'static str>{
-    
+    if index <=0 {
+      return Err("Es gibt kein 0tes Element, das erste Element wird mit access(1) angesprochen")
+    }
 	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
 	let z = match &self.root{
 		Some(x) => x,

@@ -33,8 +33,32 @@ fn testing_string_select_in_alphabet_upper_case(){
 }
 
 #[test]
-fn testing_string_select5(){
+fn testing_string_select_index_to_high(){
     let tree =common::setup_string1();
     assert_eq!(tree.select('a',20),Err("Das Symbol kommt nicht oft genug im Wort vor"));
 
+}
+
+
+#[test]
+fn testing_string_access_in_sequence(){
+    let tree =common::setup_string1();
+    assert_eq!(tree.access(1).unwrap(),'H');
+
+
+}
+
+#[test]
+fn testing_string_access_not_in_sequence(){
+    let tree =common::setup_string1();
+
+    assert_eq!(tree.access(10000),Err("Index größer als Sequenz, Fehler bei access"));
+}
+
+
+#[test]
+fn testing_string_access_0(){
+    let tree =common::setup_string1();
+
+    assert_eq!(tree.access(0),Err("Es gibt kein 0tes Element, das erste Element wird mit access(1) angesprochen"));
 }
