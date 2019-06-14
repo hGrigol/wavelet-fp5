@@ -4,8 +4,28 @@ use bv::BitsMut;
 use itertools::Itertools;
 use std::hash::Hash;
 use std::fmt::Debug;
+use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat, ensure};
 
-
+#[derive(Debug, Snafu)]
+pub enum Error {
+    #[snafu(display("Es gibt kein 0tes Element, das erste Element wird mit access(1) angesprochen"))]
+    Access0,
+    #[snafu(display("Eingabe darf bei select nicht kleiner als 1 sein"))]
+    SelectSmaller0,
+    #[snafu(display("Fehler bei root unwrap in access"))]
+    RootUnwrapError,
+    #[snafu(display("Index ist größer als die Länge der Sequence"))]
+    IndexOutOfBound,
+    #[snafu(display("Element nicht gefunden"))]
+    NoSuchElement,
+    #[snafu(display("Element nicht im Alphabet, Fehler bei select"))]
+    NotInAlphabet,
+    #[snafu(display("Das Symbol kommt nicht oft genug im Wort vor"))]
+    NotEnough,
+    
+   #[snafu(display("PlatzhalterError"))]
+   TempError,
+}
 
 
 pub struct WaveletTree<E>{
@@ -35,69 +55,64 @@ impl<T> WaveletTree <T>
     WaveletTree{alphabet: vec2, root: Some(Box::new(BinNode::create_node(vec,seqvec)))}
   }
 
- pub fn access (&self,index : usize) -> Result<T, &'static str>{
-    if index <=0 {
-      return Err("Es gibt kein 0tes Element, das erste Element wird mit access(1) angesprochen")
-    }
+ pub fn access (&self,index : usize) -> Result<T, Error>{
+    ensure!(index >0,Access0);
 	// Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
 	let z = match &self.root{
 		Some(x) => x,
-		None => return Err("Fehler bei root unwrap in access"),
+		None => return Err(Error::RootUnwrapError),
 	};
-	if z.value.bits().len() <= index as u64{
-		return Err("Index größer als Sequenz, Fehler bei access");
-	}
+	ensure!(z.value.bits().len() >index as u64,IndexOutOfBound);
+	
 
 	//-------------------------------------------	
     let z = match &self.root{
 
 		      Some(x) => x.access((index-1) as u64,&self.alphabet,0,self.alphabet.len()-1),
-		      None =>return Err("Element nicht gefunden"),   //TODO snafu Fehler implementieren
+		      None =>return Err(Error::NoSuchElement),   //TODO snafu Fehler implementieren
 
 		      };
      match z {
      
           Some(x)=> Ok(x),
-          None => return Err("Element nicht gefunden"),
+          None => return Err(Error::NoSuchElement),
      }
          
  }
- pub fn select (&self,character : T,index : usize) -> Result<u64,&'static str>{
+ pub fn select (&self,character : T,index : usize) -> Result<u64,Error>{
 
 	// Abfangen von fehlerhafter Eingabe, Index darf hier nicht 0 sein
-	if index <= 0 {
-		return Err("Eingabe darf bei select nicht kleiner als 1 sein");
-	}
+	ensure!(index > 0,SelectSmaller0); 
 
 	//------------------------
 	let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht 
 	let character_index = match character_index1  {
 		Ok(x)  => x ,
-		Err(_) => return Err("Element nicht im Alphabet, Fehler bei select"), //TODO  element nicht in alphabet 
+		Err(_) => return Err(Error::NotInAlphabet), //TODO  element nicht in alphabet 
 	};
 
 	//Abfangen dass der Buchstabe nicht index oft vorkommt
     let z = match &self.root{
 		Some(x) => x,
-		None => return Err("Fehler bei root unwrap in access"),
+		None => return Err(Error::RootUnwrapError),
 	};
 	if &self.rank(character,z.value.bits().len() as usize).unwrap() < &(index as u64){
-		return Err("Das Symbol kommt nicht oft genug im Wort vor");
+		return Err(Error::NotEnough);
 	}
 
 
 	let result = match &self.root {
 		Some(x) => x.select(index as u64,character_index,0,self.alphabet.len()-1),
-		None => return Err("Fehler"),
+		None => return Err(Error::TempError), //Err("Fehler"),
 	};
 	match result {
 		Some(x)=> return Ok(x+1),
-		None => return Err("Fehler bei select"),
+		None => return Err(Error::TempError),
 	} 	
 
 }
  
-  pub fn rank (&self,character : T,index : usize) -> Result<u64,&'static str>{
+  pub fn rank (&self,character : T,index : usize) -> Result<u64,Error>{
 	
     if index<1 {
         return Ok(0);
@@ -105,11 +120,11 @@ impl<T> WaveletTree <T>
     let index = index-1;
 	let z = match &self.root{
 		Some(x) => x,
-		None => return Err("Fehler bei root unwrap in select"),
+		None => return Err(Error::RootUnwrapError),
 	};
     // Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
 	if z.value.bits().len() <= index as u64{
-		return Err("Index größer als Sequenz");
+		return Err(Error::IndexOutOfBound);
 	}	
 
 	//---------------------------------
@@ -121,16 +136,14 @@ impl<T> WaveletTree <T>
 	let result = match &self.root {
 
 		Some(x) => (*x).rank(index as u64,character_index,0,&self.alphabet.len()-1),
-		None => return Err("Element nicht gefunden"),
+		None => return Err(Error::NoSuchElement),
 	};		
 	match result {
 				
 		Some(x) => return Ok(x),
-		None => return Err("Element nicht gefunden"),	
+		None => return Err(Error::NoSuchElement),	
 	}
-
-
-  }  
+  }
 
 }
 

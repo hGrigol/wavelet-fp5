@@ -12,3 +12,4 @@ derive_builder = "0.7.1"
 bio = "*"
 bv = { version = "0.10", features = ["serde"] }
 snafu = "0.4.1"
+matches = "0.1.8"
