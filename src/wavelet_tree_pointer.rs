@@ -48,7 +48,7 @@ impl<T> WaveletTree <T>
 	//-------------------------------------------	
     let z = match &self.root{
 
-		      Some(x) => x.access(index as u64,&self.alphabet,0,self.alphabet.len()-1),
+		      Some(x) => x.access((index-1) as u64,&self.alphabet,0,self.alphabet.len()-1),
 		      None =>return Err("Element nicht gefunden"),   //TODO snafu Fehler implementieren
 
 		      };

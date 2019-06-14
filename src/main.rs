@@ -3,7 +3,7 @@ mod wavelet_tree_pointer;
 fn main() {
 
     let tree = wavelet_tree_pointer::WaveletTree::create_tree("aba cdef".chars());;
-	let z = tree.access(10);
+	let z = tree.access(6);
 //	let z= tree.rank('a',3);
 //	let z = tree.select('a',3);
 
