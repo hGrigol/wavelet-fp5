@@ -1,4 +1,4 @@
-use bio::data_structures::rank_select::RankSelect;
+﻿use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use itertools::Itertools;
@@ -14,10 +14,9 @@ pub struct WaveletGraph<T>{
 }
 
 
-impl<T> WaveletGraph<T>
- where T: Hash+Clone+Ord+Debug+Copy {
+impl<T> WaveletGraph<T> {
 
-	pub fn create_graph(&self, graph: Graph<T>) -> WaveletGraph<T>{
+	pub fn create_graph<E,N>(&self, graph: Graph<E,N>) -> WaveletGraph<T>{
 		let mut i = 0; //Variable für das Setzen der Bits
 		let lenBit = graph.node_count() + graph.edge_count(); //Länge des Bitvektors als Summe der Anzahl der nodes und edges
 		let mut bitV = BitVec::new_fill(false,lenBit as u64);
