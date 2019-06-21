@@ -6,7 +6,23 @@ use std::hash::Hash;
 use std::fmt::Debug;
 use petgraph::graph::Graph;
 use petgraph::graph::NodeIndex;
+use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat, ensure};
 use super::wavelet_tree_pointer::WaveletTree;
+
+
+
+#[derive(Debug, Snafu)]
+pub enum Error {
+	#[snafu(display("Fehler bei select_1 auf der bitmap in ith_neighbor aufgetreten"))]
+    ErrorIthNeighbor1,
+	#[snafu(display("Fehler bei access Operation auf der adjaceny_list in ith_neighbor aufgetreten"))]
+    ErrorIthNeighbor2,
+	#[snafu(display("Fehler bei select auf der adjaceny in ith_reverse_neighbor aufgetreten"))]
+    ErrorIthReverseNeighbor1,
+	#[snafu(display("Fehler bei rank auf der bitmap in ith_reverse_neighbor aufgetreten"))]
+    ErrorIthReverseNeighbor2,
+}
+
 
 
 pub struct WaveletGraph{
@@ -37,28 +53,28 @@ impl WaveletGraph {
 
 
 	//Gibt den Index des iten Nachbarn vom Knoten v zurück
-	pub fn ith_neighor(&self, v: usize, i: usize) -> Result<u64,&'static str> {
+	pub fn ith_neighor(&self, v: usize, i: usize) -> Result<u64,Error> {
 		let l = match self.bitmap.select_1(v as u64){
 			Some(x) => x,
-			None => return Err("Fehler bei ith_neighbor"),
+			None => return Err(Error::ErrorIthNeighbor1),
 		};
 		match self.adjacency_list.access(l as usize +(i-v)){
 			Ok(x) => return Ok(x),
-			Err(_) => return Err ("Fehler bei access in ith_neighbor"),
+			Err(_) => return Err(Error::ErrorIthNeighbor2),
 		};
 	}
 
 
 
 	//Gibt den Index des iten vorherigen Nachbarn vom Knoten v zurück
-	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,&'static str> {
+	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,Error> {
 		let p = match self.adjacency_list.select(v as u64,i){
 			Ok(x) => x,
-			Err(_) => return Err("Fehler bei select in ith_reverse_neighbor"),
+			Err(_) => return Err(Error::ErrorIthReverseNeighbor1),
 		};
 		match self.bitmap.rank_1(p){
 			Some(x) => return Ok(x),
-			None => return Err("Fehler bei ith_neighbor"),
+			None => return Err(Error::ErrorIthReverseNeighbor2),
 		}
 	}
 
