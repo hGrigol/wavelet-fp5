@@ -5,6 +5,8 @@ use itertools::Itertools;
 use std::hash::Hash;
 use std::fmt::Debug;
 use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat, ensure};
+use serde::{Serialize, Deserialize};
+use serde_json;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
@@ -27,12 +29,12 @@ pub enum Error {
    TempError,
 }
 
-
+#[derive(Serialize, Deserialize)]
 pub struct WaveletTree<E>{
     alphabet:Vec<E>,
     root: Option<Box<BinNode>>,
 }
-
+#[derive(Serialize, Deserialize)]
 pub struct BinNode {
     value:RankSelect ,
     left: Option<Box<BinNode>>,
@@ -42,14 +44,17 @@ pub struct BinNode {
 
 
 
-impl<T> WaveletTree <T>
- where T: Hash+Clone+Ord+Debug+Copy{
+impl<'de,T> WaveletTree <T>
+ where T: Hash+Clone+Ord+Debug+Copy+Serialize+Deserialize<'de>{
 
   pub fn create_tree<S:Clone+Iterator<Item=T>>(sequence: S) -> WaveletTree<T>{
     let seqvec = sequence.clone().collect::<Vec<_>>();
     let mut vec = Vec::new();
     vec.extend(sequence.unique());
     vec.sort();
+
+    let serialized = serde_json::to_string(&vec).unwrap();
+
     println!("{:?}",vec);
 	let vec2 =vec.clone();
     WaveletTree{alphabet: vec2, root: Some(Box::new(BinNode::create_node(vec,seqvec)))}
