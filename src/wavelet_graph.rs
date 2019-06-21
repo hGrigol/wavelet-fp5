@@ -9,52 +9,57 @@ use petgraph::graph::NodeIndex;
 use super::wavelet_tree_pointer::WaveletTree;
 
 
-pub struct WaveletGraph<T>{
-	adjacency_list: WaveletTree<T>,
+pub struct WaveletGraph{
+	adjacency_list: WaveletTree<u64>,
 	bitmap: RankSelect,
 }
 
 
-impl<T> WaveletGraph<T> {
+impl WaveletGraph {
 
-	pub fn create_graph<E,N>(graph: Graph<E,N>) -> WaveletGraph<T>{
+	pub fn create_graph<E,N>(graph: Graph<E,N>) -> WaveletGraph{
 		let mut i = 0; //Variable für das Setzen der Bits
-		let lenBit = graph.node_count() + graph.edge_count(); //Länge des Bitvektors als Summe der Anzahl der nodes und edges
-		let mut bitV = BitVec::new_fill(false,lenBit as u64);
-		let lenAd = graph.edge_count();
-		let mut adjacenyVec = Vec::with_capacity(lenAd);
+		let len_bit = graph.node_count() + graph.edge_count(); //Länge des Bitvektors als Summe der Anzahl der nodes und edges
+		let mut bit_v = BitVec::new_fill(false,len_bit as u64);
+		let len_ad = graph.edge_count();
+		let mut adjaceny_vec = Vec::with_capacity(len_ad);
 		//Erstellen der benötigten Adjazenzliste und Bitmap
-		for nodeA in graph.node_indices() {
-			bitV.set_bit(i, true);
+		for node_a in graph.node_indices() {
+			bit_v.set_bit(i, true);
 			i = i+1;
-			for nodeB in graph.neighbors(nodeA){
-				adjacenyVec.push(nodeB);
+			for node_b in graph.neighbors(node_a){
+				adjaceny_vec.push(node_b.index() as u64);
 				i = i+1;
 			}
 		}
-		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjacenyVec.into_iter()), bitmap: RankSelect::new(bitV,1)}
+		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1)}
 	}
 
 
 	//Gibt den Index des iten Nachbarn vom Knoten v zurück
-	pub fn ith_neighor(&self, v: NodeIndex, i: u64) -> Result<u64,&'static str> {
-		let l = match &self.bitmap.select_1(v.index() as u64){
+	pub fn ith_neighor(&self, v: usize, i: usize) -> Result<u64,&'static str> {
+		let l = match self.bitmap.select_1(v as u64){
 			Some(x) => x,
 			None => return Err("Fehler bei ith_neighbor"),
 		};
-		let result = &self.adjacency_list.access(l+i-v.index() as u64);
-		
-		result.self() as u64
-
+		match self.adjacency_list.access(l as usize +(i-v)){
+			Ok(x) => return Ok(x),
+			Err(_) => return Err ("Fehler bei access in ith_neighbor"),
+		};
 	}
 
+
+
 	//Gibt den Index des iten vorherigen Nachbarn vom Knoten v zurück
-	pub fn ith_reverse_neighbor(&self, v: NodeIndex, i: usize) -> Result<u64,&'static str> {
-		let p = &self.adjacency_list.select(v,i);
-		let l = match &self.bitmap.rank_1(p){
-			Some(x) => return Ok(*x),
-			None => return Err("Fehler bei ith_neighbor"),
+	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,&'static str> {
+		let p = match self.adjacency_list.select(v as u64,i){
+			Ok(x) => x,
+			Err(_) => return Err("Fehler bei select in ith_reverse_neighbor"),
 		};
+		match self.bitmap.rank_1(p){
+			Some(x) => return Ok(x),
+			None => return Err("Fehler bei ith_neighbor"),
+		}
 	}
 
 }
