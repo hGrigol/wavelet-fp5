@@ -12,7 +12,7 @@ use super::wavelet_tree_pointer::WaveletTree;
 
 
 #[derive(Debug, Snafu)]
-pub enum Error_Graph {
+pub enum ErrorGraph {
 	#[snafu(display("Fehler bei select_1 auf der bitmap in ith_neighbor aufgetreten"))]
     ErrorIthNeighbor1,
 	#[snafu(display("Fehler bei access Operation auf der adjaceny_list in ith_neighbor aufgetreten"))]
@@ -47,44 +47,47 @@ impl WaveletGraph {
 		for node_a in graph.node_indices() {
 			bit_v.set_bit(i, true);
 			i = i+1;
+			let mut neighbors = Vec::new();
 			//let anfang = i;
 			println!("NodeIndizes: {} and neighbors:", node_a.index());
 			for node_b in graph.neighbors(node_a){
-				adjaceny_vec.push(node_b.index() as u64);
+				neighbors.push(node_b.index() as u64);
 				println!("{}", node_b.index());
 				i = i+1;
 			}
-			//adjaceny_vec.sort();
+			neighbors.sort();
+			adjaceny_vec.append(&mut neighbors);
 		}
+		println!("Adjacenzliste: {:?}", adjaceny_vec);
 		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1), node_count: nodes as u64}
 	}
 
 
 	//Gibt den Index des iten Nachbarn vom Knoten v zurück
-	pub fn ith_neighbor(&self, v: usize, i: usize) -> Result<u64,Error_Graph> {
+	pub fn ith_neighbor(&self, v: usize, i: usize) -> Result<u64,ErrorGraph> {
 		ensure!(self.node_count >= v as u64, ErrorIndexOutOfBounds);
 		let l = match self.bitmap.select_1((v+1) as u64){
 			Some(x) => x,
-			None => return Err(Error_Graph::ErrorIthNeighbor1),
+			None => return Err(ErrorGraph::ErrorIthNeighbor1),
 		};
 		match self.adjacency_list.access(l as usize +(i-v)){
 			Ok(x) => return Ok(x),
-			Err(_) => return Err(Error_Graph::ErrorIthNeighbor2),
+			Err(_) => return Err(ErrorGraph::ErrorIthNeighbor2),
 		};
 	}
 
 
 
 	//Gibt den Index des iten vorherigen Nachbarn vom Knoten v zurück
-	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,Error_Graph> {
+	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,ErrorGraph> {
 		ensure!(self.node_count >= v as u64, ErrorIndexOutOfBounds);
 		let p = match self.adjacency_list.select(v as u64,i){
 			Ok(x) => x,
-			Err(_) => return Err(Error_Graph::ErrorIthReverseNeighbor1),
+			Err(_) => return Err(ErrorGraph::ErrorIthReverseNeighbor1),
 		};
 		match self.bitmap.rank_1(p){
 			Some(x) => return Ok(x),
-			None => return Err(Error_Graph::ErrorIthReverseNeighbor2),
+			None => return Err(ErrorGraph::ErrorIthReverseNeighbor2),
 		}
 	}
 
