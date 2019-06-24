@@ -46,54 +46,19 @@ pub struct Iterhelper<E> {
     tree: WaveletTree<E>,
 }
 
-impl<'de, E> Iterhelper<E>
-where
-    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
-{
-    fn new(tree: WaveletTree<E>) -> Iterhelper<E> {
-        Iterhelper {
-            position: 0,
-            tree: tree,
-        }
-    }
-}
-
-impl<'de, E> Iterator for Iterhelper<E>
-where
-    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
-{
-    type Item = E;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.position += 1;
-        let len = match self.tree.len() {
-            Ok(x) => x,
-            Err(_) => return None,
-        };
-
-        if self.position <= len as usize {
-            match self.tree.access(self.position) {
-                Ok(x) => return Some(x),
-                Err(_) => return None,
-            };
-        } else {
-            None
-        }
-    }
-}
-
 impl<'de, T> WaveletTree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
     pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
         let seqvec = sequence.clone().collect::<Vec<_>>();
-        let mut vec = Vec::new();
-        vec.extend(sequence.unique());
-        vec.sort();
-        let vec2 = vec.clone();
+        let mut alphabet: Vec<T> = Vec::new();
+        alphabet.extend(sequence.unique());
+        alphabet.sort();
+        let alphslice = &alphabet[..];
         WaveletTree {
-            alphabet: vec2,
-            root: Some(Box::new(BinNode::create_node(vec, seqvec))),
+            root: Some(Box::new(BinNode::create_node(alphslice, seqvec))),
+            alphabet: alphabet,
         }
     }
 
@@ -107,6 +72,7 @@ where
         ensure!(z.len() >= index as u64, IndexOutOfBound);
 
         //-------------------------------------------
+
         let z = match &self.root {
             Some(x) => x.access((index - 1) as u64, 0, self.alphabet.len() - 1),
             None => return Err(Error::RootUnwrapError), //TODO snafu Fehler implementieren
@@ -116,6 +82,7 @@ where
             None => return Err(Error::NoSuchElement),
         }
     }
+
     pub fn select(&self, character: T, index: usize) -> Result<u64, Error> {
         // Abfangen von fehlerhafter Eingabe, Index darf hier nicht 0 sein
         ensure!(index > 0, SelectSmaller0);
@@ -132,6 +99,7 @@ where
             Some(x) => x,
             None => return Err(Error::RootUnwrapError),
         };
+
         if &self.rank(character, z.len() as usize).unwrap() < &(index as u64) {
             return Err(Error::NotEnough);
         }
@@ -184,7 +152,7 @@ where
         for x in 1..(len + 1) {
             match self.access(x as usize) {
                 Ok(z) => result.push(z),
-                Err(_) => println!("{:?}", x), //return Err(Error::NoSuchElement),
+                Err(_) => return Err(Error::NoSuchElement),
             };
         }
         Ok(result)
@@ -211,12 +179,8 @@ where
 }
 
 impl BinNode {
-    fn create_node<E: Hash + Clone + Ord + Debug>(
-        mut alphabet: Vec<E>,
-        sequence: Vec<E>,
-    ) -> BinNode {
+    fn create_node<E: Hash + Clone + Ord + Debug>(alphabet: &[E], sequence: Vec<E>) -> BinNode {
         let count = sequence.len();
-        //Wenn wir nur ein Zeichen im Alphabet haben sind wir in einem leaf -> keine Kinder
         if alphabet.len() <= 1 {
             let value = BitVec::new_fill(true, count as u64);
             BinNode {
@@ -228,8 +192,9 @@ impl BinNode {
             let mut value = BitVec::new_fill(false, count as u64);
             let mid = (alphabet.len() + 1) / 2;
             //Das Alphabet wird geteilt, die 2. Hälfte wird in alphabet2 gespeichert
-            let alphabet2 = alphabet.split_off(mid); //TODO eigentlich mid+1,aber dann stack overflow?
-                                                     //Die Sequenzen für den nächsten Schritt
+            let (alphabet1, alphabet2) = alphabet.split_at(mid); //TODO eigentlich mid+1,aber dann stack overflow?
+                                                                 //Die Sequenzen für den nächsten Schritt
+
             let mut sequence1 = Vec::new();
             let mut sequence2 = Vec::new();
             //Es werden alle Elemente der Sequenz durchegangen
@@ -242,7 +207,7 @@ impl BinNode {
             //Group_by teilt in Gruppen key ist true wenn Zeichen in alphabet1, sonst false
             for (key, group) in &sequence
                 .into_iter()
-                .group_by(|elem| alphabet.contains(&elem))
+                .group_by(|elem| alphabet1.contains(&elem))
             {
                 //neue Sequencen werden anhand der Keys gebaut
                 if key {
@@ -251,15 +216,9 @@ impl BinNode {
                     sequence2.extend(group)
                 }
             }
-            /*println!("alphabet1 : {}",alphabet.len());
-            println!("alphabet2 : {}",alphabet2.len());
-            println!("{:?}",value);
-            println!("-------------------------");
-            */
-
             BinNode {
                 value: RankSelect::new(value, 1),
-                left: Some(Box::new(BinNode::create_node(alphabet, sequence1))),
+                left: Some(Box::new(BinNode::create_node(alphabet1, sequence1))),
                 right: Some(Box::new(BinNode::create_node(alphabet2, sequence2))),
             }
         }
@@ -273,13 +232,13 @@ impl BinNode {
                 let next_index = self.value.rank((index) as u64).unwrap();
                 match &self.right {
                     Some(x) => return (*x).access(next_index - 1, 1 + (min + max) / 2, max),
-                    None => return None, //TODO snafu Fehler implementieren
+                    None => return None,
                 }
             } else {
                 let next_index = self.value.rank_0((index) as u64).unwrap();
                 match &self.left {
                     Some(x) => return (*x).access(next_index - 1, min, (min + max) / 2),
-                    None => return None, //TODO snafu Fehler implementieren
+                    None => return None,
                 }
             }
         }
@@ -317,11 +276,10 @@ impl BinNode {
     }
 
     fn rank(&self, index: u64, character: &usize, min: usize, max: usize) -> Option<u64> {
-        //println!("index:{}",index);
         if min == max {
             return Some(index + 1);
         }
-        //Wenn im blatt
+        //Wenn nicht im blatt
         else {
             if character <= &((max + min) / 2) {
                 let next_index = self.value.rank_0((index) as u64).unwrap();
@@ -340,7 +298,43 @@ impl BinNode {
             }
         }
     }
+
     fn len(&self) -> u64 {
         self.value.bits().len()
+    }
+}
+
+impl<'de, E> Iterhelper<E>
+where
+    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+{
+    fn new(tree: WaveletTree<E>) -> Iterhelper<E> {
+        Iterhelper {
+            position: 0,
+            tree: tree,
+        }
+    }
+}
+
+impl<'de, E> Iterator for Iterhelper<E>
+where
+    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+{
+    type Item = E;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.position += 1;
+        let len = match self.tree.len() {
+            Ok(x) => x,
+            Err(_) => return None,
+        };
+
+        if self.position <= len as usize {
+            match self.tree.access(self.position) {
+                Ok(x) => return Some(x),
+                Err(_) => return None,
+            };
+        } else {
+            None
+        }
     }
 }
