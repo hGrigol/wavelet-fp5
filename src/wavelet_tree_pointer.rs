@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 use snafu::{ensure, Snafu};
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::ops::Index;
 
+///custom errors for the tree with pointer
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display(
@@ -24,21 +26,27 @@ pub enum Error {
     #[snafu(display("Element nicht im Alphabet, Fehler bei select"))]
     NotInAlphabet,
     #[snafu(display("Das Symbol kommt nicht oft genug im Wort vor"))]
-    NotEnough,
+    NotEnoughElements,
 
     #[snafu(display("PlatzhalterError"))]
     TempError,
 }
-
+///representation of the WaveletTree
 #[derive(Serialize, Deserialize)]
 pub struct WaveletTree<E> {
+    //The alphabet of the sequence the tree is build from
     alphabet: Vec<E>,
+    //the first node that holds a bitmap over the entire sequence
     root: Option<Box<BinNode>>,
 }
+///representation of the nodes in the tree, they are managed by the tree and the user has no direct access
 #[derive(Serialize, Deserialize)]
-pub struct BinNode {
+struct BinNode {
+    ///The bitmap stored in the node
     value: RankSelect,
+    ///The left Child of the node
     left: Option<Box<BinNode>>,
+    ///The right child of the node
     right: Option<Box<BinNode>>,
 }
 pub struct Iterhelper<'de, E> {
@@ -50,6 +58,8 @@ impl<'de, T> WaveletTree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
+    /// creates a WaveletTree out of a given sequence
+    /// * `sequence` - the sequence that is representet in the tree
     pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
         let seqvec = sequence.clone().collect::<Vec<_>>();
         let mut alphabet: Vec<T> = Vec::new();
@@ -61,7 +71,8 @@ where
             alphabet: alphabet,
         }
     }
-
+    ///Returns the element at index, or an error if something goes wrong.
+    ///To make the use of this funktion more intuitiv index starts at 1, so if you want the xth element you can call access(x)
     pub fn access(&self, index: usize) -> Result<T, Error> {
         ensure!(index > 0, Access0);
         // Abfangen von fehlerhafter Eingabe, Index ist größer als Sequenz
@@ -70,9 +81,6 @@ where
             None => return Err(Error::RootUnwrapError),
         };
         ensure!(z.len() >= index as u64, IndexOutOfBound);
-
-        //-------------------------------------------
-
         let z = match &self.root {
             Some(x) => x.access((index - 1) as u64, 0, self.alphabet.len() - 1),
             None => return Err(Error::RootUnwrapError), //TODO snafu Fehler implementieren
@@ -82,7 +90,7 @@ where
             None => return Err(Error::NoSuchElement),
         }
     }
-
+    ///Returns the the position of the index'th occurence of the character
     pub fn select(&self, character: T, index: usize) -> Result<u64, Error> {
         // Abfangen von fehlerhafter Eingabe, Index darf hier nicht 0 sein
         ensure!(index > 0, SelectSmaller0);
@@ -101,7 +109,7 @@ where
         };
 
         if &self.rank(character, z.len() as usize).unwrap() < &(index as u64) {
-            return Err(Error::NotEnough);
+            return Err(Error::NotEnoughElements);
         }
 
         let result = match &self.root {
@@ -113,7 +121,7 @@ where
             None => return Err(Error::TempError),
         }
     }
-
+    /// Returns the amount of occurences of the charakter in the Intervall [1..index].
     pub fn rank(&self, character: T, index: usize) -> Result<u64, Error> {
         if index < 1 {
             return Ok(0);
@@ -172,7 +180,24 @@ where
         }
     }
 }
+/*
 
+Geht nicht weil access ein Result zurückgibt und man die Werte des access nicht referenzieren kann, da die lifetime davon auf index beschränkt ist. Behebung? TODO Nachfragen
+
+impl<'de, T> Index<usize> for WaveletTree<T>
+where
+    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+{
+   type Output = T;
+   fn index(&self, index: usize) -> &Self::Output{
+          match &self.access(index){
+          Ok(x)=> return x,
+          Err(_) => panic!("out of bounds"),
+       };
+   }
+
+}
+*/
 impl BinNode {
     fn create_node<E: Hash + Clone + Ord + Debug>(alphabet: &[E], sequence: Vec<E>) -> BinNode {
         let count = sequence.len();
