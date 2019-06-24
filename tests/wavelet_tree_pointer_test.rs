@@ -10,8 +10,8 @@ fn testing_string_rebuild() {
     let vec = tree.rebuild();
     let vec2: Vec<char> = "Hallo Ich bin ein Test für einen Satz".chars().collect();
     let b = &vec2[1..4];
-   // println!("{:?}", b);
-   // println!("{:?}", vec);
+    // println!("{:?}", b);
+    // println!("{:?}", vec);
     assert!(matches!(vec, vec2));
 }
 #[test]
@@ -21,7 +21,8 @@ fn testin_string_iterator_in_tree() {
     for x in tree.into_iter() {
         vec.push(x);
     }
-    //println!("{:?}", vec);
+    assert_eq!(tree.select('a', 1).unwrap(), 2);
+    println!("{:?}", vec);
 }
 #[test]
 fn testing_string_serialize() {

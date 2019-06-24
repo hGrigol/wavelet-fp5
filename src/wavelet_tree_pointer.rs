@@ -41,9 +41,9 @@ pub struct BinNode {
     left: Option<Box<BinNode>>,
     right: Option<Box<BinNode>>,
 }
-pub struct Iterhelper<E> {
+pub struct Iterhelper<'de, E> {
     position: usize,
-    tree: WaveletTree<E>,
+    tree: &'de WaveletTree<E>,
 }
 
 impl<'de, T> WaveletTree<T>
@@ -142,18 +142,10 @@ where
         }
     }
 
-    pub fn rebuild(&self) -> Result<Vec<T>, Error> {
+    pub fn rebuild(&'de self) -> Result<Vec<T>, Error> {
         let mut result: Vec<T> = Vec::new();
-        let root = match &self.root {
-            Some(x) => x,
-            None => return Err(Error::RootUnwrapError),
-        };
-        let len = root.len();
-        for x in 1..(len + 1) {
-            match self.access(x as usize) {
-                Ok(z) => result.push(z),
-                Err(_) => return Err(Error::NoSuchElement),
-            };
+        for x in self.into_iter() {
+            result.push(x);
         }
         Ok(result)
     }
@@ -167,14 +159,17 @@ where
     }
 }
 
-impl<'de, T> IntoIterator for WaveletTree<T>
+impl<'de, T> IntoIterator for &'de WaveletTree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
     type Item = T;
-    type IntoIter = Iterhelper<T>;
+    type IntoIter = Iterhelper<'de, T>;
     fn into_iter(self) -> Self::IntoIter {
-        Iterhelper::new(self)
+        Iterhelper {
+            position: 0,
+            tree: self,
+        }
     }
 }
 
@@ -304,19 +299,7 @@ impl BinNode {
     }
 }
 
-impl<'de, E> Iterhelper<E>
-where
-    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
-{
-    fn new(tree: WaveletTree<E>) -> Iterhelper<E> {
-        Iterhelper {
-            position: 0,
-            tree: tree,
-        }
-    }
-}
-
-impl<'de, E> Iterator for Iterhelper<E>
+impl<'de, E> Iterator for Iterhelper<'de, E>
 where
     E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
