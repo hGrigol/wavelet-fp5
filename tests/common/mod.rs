@@ -7,7 +7,7 @@ pub fn setup_string1() -> WaveletTree<char>{
 }
 
 pub fn setup_string() -> WaveletTree<char> {
-    wavelet5::WaveletTree::create_tree("AsWDaaaaaaGDW!/(%§".chars().into_iter())
+    wavelet5::WaveletTree::create_tree("AsWDaaaaa aGDW!/(%§".chars().into_iter())
 }
 
 pub fn setup_graph() -> WaveletGraph{

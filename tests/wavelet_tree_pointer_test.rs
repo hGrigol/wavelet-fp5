@@ -9,7 +9,9 @@ fn testing_string_rebuild() {
     let tree = common::setup_string1();
     let vec = tree.rebuild();
     let vec2: Vec<char> = "Hallo Ich bin ein Test für einen Satz".chars().collect();
-    println!("{:?}", vec);
+    let b = &vec2[1..4];
+    // println!("{:?}", b);
+    // println!("{:?}", vec);
     assert!(matches!(vec, vec2));
 }
 #[test]
@@ -19,6 +21,7 @@ fn testin_string_iterator_in_tree() {
     for x in tree.into_iter() {
         vec.push(x);
     }
+    assert_eq!(tree.select('a', 1).unwrap(), 2);
     println!("{:?}", vec);
 }
 #[test]
@@ -46,6 +49,7 @@ fn testing_string_select_not_in_alphabet() {
 fn testing_string_select_white_space() {
     let tree = common::setup_string1();
     assert_eq!(tree.select(' ', 3).unwrap(), 14);
+    assert_eq!(tree.access(14).unwrap(), ' ');
 }
 
 #[test]
@@ -57,7 +61,10 @@ fn testing_string_select_in_alphabet_upper_case() {
 #[test]
 fn testing_string_select_index_to_high() {
     let tree = common::setup_string1();
-    assert!(matches!(tree.select('a', 20), Err(Error::NotEnough)));
+    assert!(matches!(
+        tree.select('a', 20),
+        Err(Error::NotEnoughElements)
+    ));
 }
 
 #[test]
@@ -78,4 +85,10 @@ fn testing_string_access_0() {
     let tree = common::setup_string1();
 
     assert!(matches!(tree.access(0), Err(Error::Access0)));
+}
+
+#[test]
+fn testing_string_rank() {
+    let tree = common::setup_string1();
+    assert_eq!(tree.rank('l', 4).unwrap(), 2);
 }
