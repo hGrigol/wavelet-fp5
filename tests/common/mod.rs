@@ -17,10 +17,9 @@ pub fn setup_graph() -> WaveletGraph{
 	let qc = deps.add_node("quickcheck");
 	let rand = deps.add_node("rand");
 	let libc = deps.add_node("libc");
-	let testn1 = deps.add_node("testn1");
 	deps.extend_with_edges(&[
     	(pg, fb), (pg, qc),
-    	(qc, rand), (rand, libc), (qc, libc), (rand, testn1), (testn1, pg)
+    	(qc, rand), (rand, libc), (qc, libc)
 	]);
 	wavelet5::WaveletGraph::create_graph(deps)
 }
