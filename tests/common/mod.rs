@@ -10,6 +10,7 @@ pub fn setup_string() -> WaveletTree<char> {
     wavelet5::WaveletTree::create_tree("AsWDaaaaa aGDW!/(%§".chars().into_iter())
 }
 
+
 pub fn setup_graph() -> WaveletGraph{
 	let mut deps = Graph::<&str, &str>::new();
 	let pg = deps.add_node("petgraph");
@@ -22,5 +23,14 @@ pub fn setup_graph() -> WaveletGraph{
     	(qc, rand), (rand, libc), (qc, libc)
 	]);
 	wavelet5::WaveletGraph::create_graph(deps)
+}
+
+
+pub fn setup_ints() -> WaveletTree<u64> {
+    let mut vec = Vec::new();
+    for x in 0..1000000 {
+        vec.push(x % 30);
+    }
+    wavelet5::WaveletTree::create_tree(vec.into_iter())
 }
 
