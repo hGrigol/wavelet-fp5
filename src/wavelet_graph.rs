@@ -1,12 +1,8 @@
 ﻿use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
-use itertools::Itertools;
-use std::hash::Hash;
-use std::fmt::Debug;
 use petgraph::graph::Graph;
-use petgraph::graph::NodeIndex;
-use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat, ensure};
+use snafu::{Snafu, ensure};
 use super::wavelet_tree_pointer::WaveletTree;
 
 
@@ -17,7 +13,7 @@ pub enum ErrorGraph {
     ErrorIthNeighbor1,
 	#[snafu(display("Error occured when calling access on adjaceny_list in ith_neighbor"))]
     ErrorIthNeighbor2,
-	#[snafu(display("v > node count or i = 0"))]
+	#[snafu(display("v > number of nodes or i = 0"))]
     ErrorIndexOutOfBounds,
 	#[snafu(display("Error occured when calling select on adjaceny_list in ith_reverse_neighbor"))]
     ReverseNeighborDoesnotExist,
@@ -30,20 +26,21 @@ pub enum ErrorGraph {
 }
 
 
-
+/// Representation of a directed or undirected graph. 
+/// All adjacency lists are concatenated and saved as a WaveletTree.  
+/// Indices are saved as Option of u64 starting with 0. 
+/// None is added as a Placeholder when a new adjaceny list is concatenated. 
+/// In the bitmap a true marks the beginning of a new adjaceny list 
+/// (e.g. the fifth true bit marks the beginng of the adjaceny list of the node with index 5)
 pub struct WaveletGraph{
 	adjacency_list: WaveletTree<Option<u64>>,
 	bitmap: RankSelect,
-	node_count: u64,
 }
 
 
 impl WaveletGraph {
 
 	/// Creates a representation of a given petgraph as a WaveletTree and a bitmap.
-	/// The WaveletTree concatenats all the adjacency lists. 
-	/// Indices are saved as Option of u64 starting with 0.
-	/// None is added as a Placeholder when a new adjaceny list is concatenated.
 	pub fn create_graph<E,N>(graph: Graph<E,N>) -> WaveletGraph{
 		let mut i = 0; //Variable for setting the bits
 		let nodes = graph.node_count();
@@ -63,14 +60,14 @@ impl WaveletGraph {
 			neighbors.sort();
 			adjaceny_vec.append(&mut neighbors);
 		}
-		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1), node_count: nodes as u64}
+		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1)}
 	}
 
 
 	/// Returns the index of the ith neighbor of node v.
 	/// Node indices start with 0
 	pub fn ith_neighbor(&self, v: usize, i: usize) -> Result<u64,ErrorGraph> {
-		ensure!(self.node_count > v as u64 && i > 0, ErrorIndexOutOfBounds);
+		ensure!(self.adjacency_list.alphabet_len() > v && i > 0, ErrorIndexOutOfBounds);
 		let l = match self.bitmap.select_1((v+1) as u64){
 			Some(x) => x,
 			None => return Err(ErrorGraph::ErrorIthNeighbor1),
@@ -94,7 +91,7 @@ impl WaveletGraph {
 	/// Returns the index of the ith reverse neighbor of node v.
 	/// Node indices start with 0
 	pub fn ith_reverse_neighbor(&self, v: usize, i: usize) -> Result<u64,ErrorGraph> {
-		ensure!(self.node_count > v as u64 && i > 0, ErrorIndexOutOfBounds);
+		ensure!(self.adjacency_list.alphabet_len() > v && i > 0, ErrorIndexOutOfBounds);
 		let p = match self.adjacency_list.select(Some(v as u64),i){
 			Ok(x) => x,
 			Err(_) => return Err(ErrorGraph::ReverseNeighborDoesnotExist),

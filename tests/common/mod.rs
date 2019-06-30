@@ -34,3 +34,16 @@ pub fn setup_ints() -> WaveletTree<u64> {
     wavelet5::WaveletTree::create_tree(vec.into_iter())
 }
 
+pub fn setup_single_node() -> WaveletGraph{
+	let mut deps = Graph::<&str, &str>::new();
+	let pg = deps.add_node("petgraph");
+	wavelet5::WaveletGraph::create_graph(deps)
+}
+
+pub fn setup_single_graph() -> WaveletGraph{
+	let mut deps = Graph::<&str, &str>::new();
+	let pg = deps.add_node("petgraph");
+	deps.extend_with_edges(&[(pg,pg)]);
+	wavelet5::WaveletGraph::create_graph(deps)
+}
+
