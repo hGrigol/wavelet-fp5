@@ -49,6 +49,7 @@ struct BinNode {
     ///The right child of the node
     right: Option<Box<BinNode>>,
 }
+///The Iterator for WaveletTrees
 pub struct Iterhelper<'de, E> {
     position: usize,
     tree: &'de WaveletTree<E>,
@@ -83,13 +84,28 @@ where
         ensure!(z.len() >= index as u64, IndexOutOfBound);
         let z = match &self.root {
             Some(x) => x.access((index - 1) as u64, 0, self.alphabet.len() - 1),
-            None => return Err(Error::RootUnwrapError), //TODO snafu Fehler implementieren
+            None => return Err(Error::RootUnwrapError),
         };
         match z {
             Some(x) => Ok(self.alphabet[x]),
             None => return Err(Error::NoSuchElement),
         }
     }
+
+    fn access_ref(&self, index: usize) -> &T {
+        let result = match self.access(index) {
+            Ok(x) => x,
+            Err(_) => panic!("Index out of Bounds"),
+        };
+
+        for i in 0..self.alphabet.len() {
+            if self.alphabet[i] == result {
+                return &self.alphabet[i];
+            }
+        }
+        panic!("Index in Bounds but not found");
+    }
+
     ///Returns the the position of the index'th occurence of the character
     pub fn select(&self, character: T, index: usize) -> Result<u64, Error> {
         // Abfangen von fehlerhafter Eingabe, Index darf hier nicht 0 sein
@@ -99,7 +115,7 @@ where
         let character_index1 = &self.alphabet.binary_search(&character); // speichere an welchem index steht das gesuchte zeichen im alphabet steht
         let character_index = match character_index1 {
             Ok(x) => x,
-            Err(_) => return Err(Error::NotInAlphabet), //TODO  element nicht in alphabet
+            Err(_) => return Err(Error::NotInAlphabet),
         };
 
         //Abfangen dass der Buchstabe nicht index oft vorkommt
@@ -121,7 +137,7 @@ where
             None => return Err(Error::TempError),
         }
     }
-    /// Returns the amount of occurences of the charakter in the Intervall [1..index].
+    /// Returns the number of occurences of the character in the Intervall [1..index].
     pub fn rank(&self, character: T, index: usize) -> Result<u64, Error> {
         if index < 1 {
             return Ok(0);
@@ -149,15 +165,15 @@ where
             None => return Err(Error::NoSuchElement),
         }
     }
-
-    pub fn rebuild(&'de self) -> Result<Vec<T>, Error> {
+    /// Returns a Vector that holds the sequence, this does not consume the tree
+    pub fn rebuild(&'de self) -> Vec<T> {
         let mut result: Vec<T> = Vec::new();
         for x in self.into_iter() {
             result.push(x);
         }
-        Ok(result)
+        result
     }
-
+    ///Returns the length of the sequence or an error if the root is missing
     pub fn len(&self) -> Result<u64, Error> {
         let root = match &self.root {
             Some(x) => x,
@@ -166,7 +182,7 @@ where
         Ok(root.len())
     }
 }
-
+///Implements a non-consuming Iterator for the WaveletTree
 impl<'de, T> IntoIterator for &'de WaveletTree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
@@ -180,24 +196,17 @@ where
         }
     }
 }
-/*
-
-Geht nicht weil access ein Result zurückgibt und man die Werte des access nicht referenzieren kann, da die lifetime davon auf index beschränkt ist. Behebung? TODO Nachfragen
-
+///Implements the Index Trait to allow access with [index], since it uses the access function index starts at 1
 impl<'de, T> Index<usize> for WaveletTree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
-   type Output = T;
-   fn index(&self, index: usize) -> &Self::Output{
-          match &self.access(index){
-          Ok(x)=> return x,
-          Err(_) => panic!("out of bounds"),
-       };
-   }
-
+    type Output = T;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.access_ref(index)
+    }
 }
-*/
+
 impl BinNode {
     fn create_node<E: Hash + Clone + Ord + Debug>(alphabet: &[E], sequence: Vec<E>) -> BinNode {
         let count = sequence.len();
@@ -212,8 +221,8 @@ impl BinNode {
             let mut value = BitVec::new_fill(false, count as u64);
             let mid = (alphabet.len() + 1) / 2;
             //Das Alphabet wird geteilt, die 2. Hälfte wird in alphabet2 gespeichert
-            let (alphabet1, alphabet2) = alphabet.split_at(mid); //TODO eigentlich mid+1,aber dann stack overflow?
-                                                                 //Die Sequenzen für den nächsten Schritt
+            let (alphabet1, alphabet2) = alphabet.split_at(mid);
+            //Die Sequenzen für den nächsten Schritt
 
             let mut sequence1 = Vec::new();
             let mut sequence2 = Vec::new();
