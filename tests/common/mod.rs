@@ -1,7 +1,10 @@
 use wavelet5::WaveletTreePointerFree;
 use wavelet5::WaveletTree;
-pub fn setup_string1() -> WaveletTree<char> {
-    wavelet5::WaveletTree::create_tree("Hallo Ich bin ein Test für einen Satz".chars().into_iter())
+use wavelet5::WaveletGraph;
+use petgraph::Graph;
+
+pub fn setup_string1() -> WaveletTree<char>{
+ wavelet5::WaveletTree::create_tree("Hallo Ich bin ein Test für einen Satz".chars().into_iter())   
 }
 
 pub fn setup_string() -> WaveletTree<char> {
@@ -16,6 +19,21 @@ pub fn setup_string_2_1() -> WaveletTreePointerFree<char> {
     wavelet5::WaveletTreePointerFree::create("AsWDaaaaa aGDW!/(%§".chars().into_iter())
 }
 
+
+pub fn setup_graph() -> WaveletGraph{
+	let mut deps = Graph::<&str, &str>::new();
+	let pg = deps.add_node("petgraph");
+	let fb = deps.add_node("fixedbitset");
+	let qc = deps.add_node("quickcheck");
+	let rand = deps.add_node("rand");
+	let libc = deps.add_node("libc");
+	deps.extend_with_edges(&[
+    	(pg, fb), (pg, qc),
+    	(qc, rand), (rand, libc), (qc, libc)
+	]);
+	wavelet5::WaveletGraph::create_graph(deps)
+}
+
 pub fn setup_ints() -> WaveletTree<u64> {
     let mut vec = Vec::new();
     for x in 0..1000000 {
@@ -24,5 +42,17 @@ pub fn setup_ints() -> WaveletTree<u64> {
     wavelet5::WaveletTree::create_tree(vec.into_iter())
 }
 
+pub fn setup_single_node() -> WaveletGraph{
+	let mut deps = Graph::<&str, &str>::new();
+	let pg = deps.add_node("petgraph");
+	wavelet5::WaveletGraph::create_graph(deps)
+}
+
+pub fn setup_single_graph() -> WaveletGraph{
+	let mut deps = Graph::<&str, &str>::new();
+	let pg = deps.add_node("petgraph");
+	deps.extend_with_edges(&[(pg,pg)]);
+	wavelet5::WaveletGraph::create_graph(deps)
+}
 
 
