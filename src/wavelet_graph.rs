@@ -60,7 +60,7 @@ impl WaveletGraph {
             adjaceny_vec.append(&mut neighbors);
         }
         WaveletGraph {
-            adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()),
+            adjacency_list: WaveletTree::create(adjaceny_vec.into_iter()),
             bitmap: RankSelect::new(bit_v, 1),
         }
     }

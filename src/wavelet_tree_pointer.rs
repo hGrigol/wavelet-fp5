@@ -62,7 +62,7 @@ where
 {
     /// creates a WaveletTree out of a given sequence
     /// * `sequence` - the sequence that is representet in the tree
-    pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
+    pub fn create<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
         let mut sequence = sequence.peekable();
         if sequence.peek().is_none() {
             panic!("Die übergebene Sequence ist leer!")

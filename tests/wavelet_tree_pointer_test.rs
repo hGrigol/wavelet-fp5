@@ -196,5 +196,5 @@ fn testing_int_rank() {
 #[should_panic]
 fn testing_empty_iterator() {
     let mut nope = iter::empty::<i32>();
-    let tree = wavelet5::WaveletTree::create_tree(nope);
+    let tree = wavelet5::WaveletTree::create(nope);
 }
