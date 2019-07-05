@@ -39,7 +39,8 @@ pub struct WaveletTree<E> {
     //the first node that holds a bitmap over the entire sequence
     root: Option<Box<BinNode>>,
 }
-///representation of the nodes in the tree, they are managed by the tree and the user has no direct access
+///representation of the nodes in the tree,
+///they are managed by the tree and the user has no direct access
 #[derive(Serialize, Deserialize)]
 struct BinNode {
     ///The bitmap stored in the node
@@ -191,20 +192,7 @@ where
         self.alphabet.len()
     }
 }
-///Implements a non-consuming Iterator for the WaveletTree
-impl<'de, T> IntoIterator for &'de WaveletTree<T>
-where
-    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
-{
-    type Item = T;
-    type IntoIter = Iterhelper<'de, T>;
-    fn into_iter(self) -> Self::IntoIter {
-        Iterhelper {
-            position: 0,
-            tree: self,
-        }
-    }
-}
+
 ///Implements the Index Trait to allow access with [index], since it uses the access function index starts at 1
 impl<'de, T> Index<usize> for WaveletTree<T>
 where
@@ -339,6 +327,20 @@ impl BinNode {
 
     fn len(&self) -> u64 {
         self.value.bits().len()
+    }
+}
+///Implements a non-consuming Iterator for the WaveletTree
+impl<'de, T> IntoIterator for &'de WaveletTree<T>
+where
+    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+{
+    type Item = T;
+    type IntoIter = Iterhelper<'de, T>;
+    fn into_iter(self) -> Self::IntoIter {
+        Iterhelper {
+            position: 0,
+            tree: self,
+        }
     }
 }
 
