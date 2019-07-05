@@ -1,4 +1,4 @@
-﻿use bio::data_structures::rank_select::RankSelect;
+use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use itertools::Itertools;
@@ -63,7 +63,9 @@ where
     /// * `sequence` - the sequence that is representet in the tree
     pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
         let mut sequence = sequence.peekable();
-        if sequence.peek().is_none(){panic!("Die übergebene Sequence ist leer!")};
+        if sequence.peek().is_none() {
+            panic!("Die übergebene Sequence ist leer!")
+        };
         let seqvec = sequence.clone().collect::<Vec<_>>();
         let mut alphabet: Vec<T> = Vec::new();
         alphabet.extend(sequence.unique());
@@ -185,7 +187,7 @@ where
     }
 
     ///Returns the lenght of the alphabet
-    pub fn alphabet_len(&self) -> usize{
+    pub fn alphabet_len(&self) -> usize {
         self.alphabet.len()
     }
 }

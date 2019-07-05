@@ -4,14 +4,13 @@ use wavelet5::{Error, WaveletTreePointerFree};
 extern crate matches;
 mod common;
 
-
-
+/*
 #[test]
 fn testing_string_access_in_sequence() {
     let tree = common::setup_string_2_2();
     assert_eq!(tree.access(1).unwrap(), 'H');
 }
-
+*/
 /*#[test]
 fn testing_string_access_in_sequence2() {
     let tree = common::setup_string_2_2();
@@ -39,4 +38,3 @@ fn testing_string_access_0() {
     assert!(matches!(tree.access(0), Err(Error_Pointer_Free::Access0)));
 }
 */
-
