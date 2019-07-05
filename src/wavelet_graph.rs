@@ -31,7 +31,7 @@ pub enum ErrorGraph {
 /// Indices are saved as Option of u64 starting with 0. 
 /// None is added as a Placeholder when a new adjaceny list is concatenated. 
 /// In the bitmap a true marks the beginning of a new adjaceny list 
-/// (e.g. the fifth true bit marks the beginng of the adjaceny list of the node with index 5)
+/// (e.g. the fifth true bit marks the beginning of the adjaceny list of the node with index 5)
 pub struct WaveletGraph{
 	adjacency_list: WaveletTree<Option<u64>>,
 	bitmap: RankSelect,
