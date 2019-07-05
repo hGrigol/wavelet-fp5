@@ -1,5 +1,6 @@
 use serde_json;
 use wavelet5::{Error, WaveletTree};
+use std::iter;
 #[macro_use(matches)]
 extern crate matches;
 mod common;
@@ -190,3 +191,11 @@ fn testing_int_rank() {
     let tree = common::setup_ints();
     assert_eq!(tree.rank(4, 10).unwrap(), 1);
 }
+
+#[test]
+#[should_panic]
+fn testing_empty_iterator(){
+  let mut nope = iter::empty::<i32>();
+  let tree = wavelet5::WaveletTree::create_tree(nope);
+}
+

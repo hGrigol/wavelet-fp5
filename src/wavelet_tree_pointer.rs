@@ -62,6 +62,8 @@ where
     /// creates a WaveletTree out of a given sequence
     /// * `sequence` - the sequence that is representet in the tree
     pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
+        let mut sequence = sequence.peekable();
+        if sequence.peek().is_none(){panic!("Die übergebene Sequence ist leer!")};
         let seqvec = sequence.clone().collect::<Vec<_>>();
         let mut alphabet: Vec<T> = Vec::new();
         alphabet.extend(sequence.unique());
