@@ -2,10 +2,10 @@ use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use snafu::{ensure, Snafu};
 use std::fmt::Debug;
 use std::hash::Hash;
-use serde::{Deserialize, Serialize};
 use std::ops::Index;
 ///custom errors for the tree without pointer
 #[derive(Debug, Snafu)]
@@ -35,8 +35,6 @@ pub struct Iterhelper<'de, E> {
     tree: &'de WaveletTreePointerFree<E>,
 }
 
-
-
 #[derive(Serialize, Deserialize)]
 pub struct WaveletTreePointerFree<E> {
     alphabet: Vec<E>,
@@ -48,7 +46,7 @@ impl<'de, T> WaveletTreePointerFree<T>
 where
     T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
-	fn access_ref(&self, index: usize) -> &T {
+    fn access_ref(&self, index: usize) -> &T {
         let result = match self.access(index) {
             Ok(x) => x,
             Err(_) => panic!("Index out of Bounds"),
@@ -62,9 +60,9 @@ where
         panic!("Index in Bounds but not found");
     }
 
-	pub fn len(&self)->usize{
-		self.wordlength
-	}	
+    pub fn len(&self) -> usize {
+        self.wordlength
+    }
 
     pub fn create<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTreePointerFree<T> {
         let seqvec = sequence.clone().collect::<Vec<_>>();
@@ -87,7 +85,7 @@ where
             }
         }
 
-        let mut vec_collect = Vec::new(); // speichere alle Bitvekoren("die Schnipsel") als Tupel mit ihrer Position 
+        let mut vec_collect = Vec::new(); // speichere alle Bitvekoren("die Schnipsel") als Tupel mit ihrer Position
         vec_collect.push((bit_vec, 1));
 
         //neue Sequenzen erstellen
@@ -105,7 +103,7 @@ where
             }
         }
 
-        vec_collect.extend(create_vec(sequence1, alphabet.clone(), 2)); //splittet alphabet 
+        vec_collect.extend(create_vec(sequence1, alphabet.clone(), 2)); //splittet alphabet
         vec_collect.extend(create_vec(sequence2, alphabet2, 3));
 
         // ordne den zurückgegebenen Vec nach ranking
@@ -116,17 +114,14 @@ where
         let mut ebene: usize = 0;
         let mut zeichen: usize = 0;
 
-
-
         for i in 0..vec_collect.len() {
-			// überprüfe ob sich Ebene geändert hat            
-			if compute_stage(&vec_collect[i].1) != ebene {
+            // überprüfe ob sich Ebene geändert hat
+            if compute_stage(&vec_collect[i].1) != ebene {
                 //wenn lücke vorliegt
                 if zeichen != wordlength {
                     // füge restliche zeichen hinzu: wordlength - zeichen in dieser ebene
                     for z in 0..(wordlength - zeichen) {
                         bitmap.push(false);
-                       
                     }
                 }
                 // setzte zeichen zurück und erhöhe ebene
@@ -157,7 +152,7 @@ where
 
         //---------------------------------------------------------------------------------------
         let alphabet_min = 0;
-        let alphabet_max = self.alphabet.len() - 1; 
+        let alphabet_max = self.alphabet.len() - 1;
         let right = self.wordlength - 1;
         let left = 0;
         let position = self.access_bitmap(index - 1, alphabet_min, alphabet_max, left, right);
@@ -223,8 +218,6 @@ where
             }
             // falls wir nach rechts gehen
             else {
-                
-
                 //erste ebene
                 if left == 0 {
                     // gehe rechts
@@ -244,7 +237,7 @@ where
                 //nicht erste ebene
                 else {
                     //gehe rechts
-                    
+
                     let next_index = left
                         + self.wordlength as usize
                         + self.bitmap.rank_0(right as u64).unwrap() as usize
@@ -394,8 +387,8 @@ where
     type Item = E;
     fn next(&mut self) -> Option<Self::Item> {
         self.position += 1;
-        let len = self.tree.len() ;
-        if self.position <= len  {
+        let len = self.tree.len();
+        if self.position <= len {
             match self.tree.access(self.position) {
                 Ok(x) => return Some(x),
                 Err(_) => return None,

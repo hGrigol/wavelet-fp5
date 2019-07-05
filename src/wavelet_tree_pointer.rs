@@ -33,9 +33,9 @@ pub enum Error {
 }
 ///representation of the WaveletTree
 #[derive(Serialize, Deserialize)]
-pub struct WaveletTree<E> {
+pub struct WaveletTree<T> {
     //The alphabet of the sequence the tree is build from
-    alphabet: Vec<E>,
+    alphabet: Vec<T>,
     //the first node that holds a bitmap over the entire sequence
     root: Option<Box<BinNode>>,
 }
@@ -51,9 +51,9 @@ struct BinNode {
     right: Option<Box<BinNode>>,
 }
 ///The Iterator for WaveletTrees
-pub struct Iterhelper<'de, E> {
+pub struct Iterhelper<'de, T> {
     position: usize,
-    tree: &'de WaveletTree<E>,
+    tree: &'de WaveletTree<T>,
 }
 
 impl<'de, T> WaveletTree<T>
@@ -344,11 +344,11 @@ where
     }
 }
 
-impl<'de, E> Iterator for Iterhelper<'de, E>
+impl<'de, T> Iterator for Iterhelper<'de, T>
 where
-    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
-    type Item = E;
+    type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.position += 1;
         let len = match self.tree.len() {

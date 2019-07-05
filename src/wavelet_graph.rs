@@ -3,8 +3,8 @@ use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use petgraph::graph::Graph;
-use snafu::{ensure, Snafu};
 use serde::{Deserialize, Serialize};
+use snafu::{ensure, Snafu};
 
 #[derive(Debug, Snafu)]
 pub enum ErrorGraph {

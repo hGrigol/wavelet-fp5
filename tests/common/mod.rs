@@ -17,7 +17,7 @@ pub fn setup_ints() -> WaveletTree<u64> {
         vec.push(x % 30);
     }
     wavelet5::WaveletTree::create(vec.into_iter())
-} 
+}
 pub fn setup_string_2_2() -> WaveletTreePointerFree<char> {
     wavelet5::WaveletTreePointerFree::create(
         "Hallo Ich bin ein Test für einen Satz".chars().into_iter(),
@@ -38,8 +38,6 @@ pub fn setup_graph() -> WaveletGraph {
     deps.extend_with_edges(&[(pg, fb), (pg, qc), (qc, rand), (rand, libc), (qc, libc)]);
     wavelet5::WaveletGraph::create_graph(deps)
 }
-
-
 
 pub fn setup_single_node() -> WaveletGraph {
     let mut deps = Graph::<&str, &str>::new();

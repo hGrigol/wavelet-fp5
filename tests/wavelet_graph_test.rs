@@ -72,9 +72,9 @@ fn testing_fail_ith_reverse_neighbor() {
 }
 
 #[test]
-fn testing_serialize(){
-	let graph = common::setup_graph();
-	let serialized = serde_json::to_string(&graph).unwrap();
-	let _graph2: WaveletGraph = serde_json::from_str(&serialized).unwrap();
-	assert!(matches!(graph, _graph2));
+fn testing_serialize() {
+    let graph = common::setup_graph();
+    let serialized = serde_json::to_string(&graph).unwrap();
+    let _graph2: WaveletGraph = serde_json::from_str(&serialized).unwrap();
+    assert!(matches!(graph, _graph2));
 }
