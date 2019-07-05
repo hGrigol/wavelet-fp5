@@ -4,6 +4,7 @@ use bv::BitVec;
 use bv::BitsMut;
 use petgraph::graph::Graph;
 use snafu::{ensure, Snafu};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Snafu)]
 pub enum ErrorGraph {
@@ -27,10 +28,11 @@ pub enum ErrorGraph {
 
 /// Representation of a directed or undirected graph.
 /// All adjacency lists are concatenated and saved as a WaveletTree.  
-/// Indices are saved as 'Option<u64>' starting with 0.
+/// Indices are saved as `Option<u64>` starting with 0.
 /// None is added as a Placeholder when a new adjaceny list is concatenated.
 /// In the bitmap a true marks the beginning of a new adjaceny list
 /// (e.g. the fifth true bit marks the beginning of the adjaceny list of the node with index 5)
+#[derive(Serialize, Deserialize)]
 pub struct WaveletGraph {
     adjacency_list: WaveletTree<Option<u64>>,
     bitmap: RankSelect,
