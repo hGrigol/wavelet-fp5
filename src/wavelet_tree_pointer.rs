@@ -1,4 +1,4 @@
-use bio::data_structures::rank_select::RankSelect;
+﻿use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use itertools::Itertools;
@@ -182,6 +182,11 @@ where
             None => return Err(Error::RootUnwrapError),
         };
         Ok(root.len())
+    }
+
+    ///Returns the lenght of the alphabet
+    pub fn alphabet_len(&self) -> usize{
+        self.alphabet.len()
     }
 }
 ///Implements a non-consuming Iterator for the WaveletTree
