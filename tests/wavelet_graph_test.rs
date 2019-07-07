@@ -46,3 +46,27 @@ fn testing_fail_ith_reverse_neighbor(){
 	assert!(matches! (single_edge.ith_reverse_neighbor(0,3), Err(ErrorGraph::ReverseNeighborDoesnotExist)));
 }
 
+#[test]
+fn testing_which_neighbor(){
+	let graph = common::setup_graph();
+	let single_edge = common::setup_single_graph();
+	assert_eq!(graph.which_neighbor(0,2).unwrap(),2);
+	assert_eq!(graph.which_neighbor(2,3).unwrap(),1);
+	assert_eq!(graph.which_neighbor(3,4).unwrap(),1);
+	assert_eq!(single_edge.which_neighbor(0,0).unwrap(),1);
+	assert!(matches!(graph.which_neighbor(1,3), Err(ErrorGraph::IsNoNeighbor)));
+	assert!(matches!(single_edge.which_neighbor(2,3), Err(ErrorGraph::ErrorIndexOutOfBounds)));
+}
+#[test]
+fn testing_get_weights(){
+	let graph_unweighted = common::setup_graph();
+	let graph = common::setup_graph_weighted();
+	assert_eq!(graph.get_weight(0,1).unwrap(),1);
+	assert_eq!(graph.get_weight(3,4).unwrap(),5);
+	assert_eq!(graph.get_weight(2,4).unwrap(),4);
+	assert!(matches!(graph.get_weight(0,0), Err(ErrorGraph::IsNoNeighbor)));
+	assert_eq!(graph_unweighted.get_weight(0,1).unwrap(),0);
+	assert_eq!(graph_unweighted.get_weight(3,4).unwrap(),0);
+	assert_eq!(graph_unweighted.get_weight(2,4).unwrap(),0);
+	assert!(matches!(graph_unweighted.get_weight(0,0), Err(ErrorGraph::IsNoNeighbor)));
+}

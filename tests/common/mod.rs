@@ -11,8 +11,8 @@ pub fn setup_string() -> WaveletTree<char> {
 }
 
 
-pub fn setup_graph() -> WaveletGraph{
-	let mut deps = Graph::<&str, &str>::new();
+pub fn setup_graph() -> WaveletGraph<u64>{
+	let mut deps = Graph::<&str, u64>::new();
 	let pg = deps.add_node("petgraph");
 	let fb = deps.add_node("fixedbitset");
 	let qc = deps.add_node("quickcheck");
@@ -34,16 +34,29 @@ pub fn setup_ints() -> WaveletTree<u64> {
     wavelet5::WaveletTree::create_tree(vec.into_iter())
 }
 
-pub fn setup_single_node() -> WaveletGraph{
-	let mut deps = Graph::<&str, &str>::new();
+pub fn setup_single_node() -> WaveletGraph<u64>{
+	let mut deps = Graph::<&str, u64>::new();
 	let pg = deps.add_node("petgraph");
 	wavelet5::WaveletGraph::create_graph(deps)
 }
 
-pub fn setup_single_graph() -> WaveletGraph{
-	let mut deps = Graph::<&str, &str>::new();
+pub fn setup_single_graph() -> WaveletGraph<u64>{
+	let mut deps = Graph::<&str, u64>::new();
 	let pg = deps.add_node("petgraph");
 	deps.extend_with_edges(&[(pg,pg)]);
 	wavelet5::WaveletGraph::create_graph(deps)
 }
 
+pub fn setup_graph_weighted() -> WaveletGraph<u64>{
+	let mut deps = Graph::<&str, u64>::new();
+	let pg = deps.add_node("petgraph");
+	let fb = deps.add_node("fixedbitset");
+	let qc = deps.add_node("quickcheck");
+	let rand = deps.add_node("rand");
+	let libc = deps.add_node("libc");
+	deps.extend_with_edges(&[
+    	(pg, fb, 1), (pg, qc, 2),
+    	(qc, rand, 3), (rand, libc, 5), (qc, libc, 4)
+	]);
+	wavelet5::WaveletGraph::create_graph(deps)
+}
