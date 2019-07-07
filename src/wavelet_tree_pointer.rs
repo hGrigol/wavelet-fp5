@@ -1,4 +1,4 @@
-﻿use bio::data_structures::rank_select::RankSelect;
+use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use itertools::Itertools;
@@ -33,13 +33,14 @@ pub enum Error {
 }
 ///representation of the WaveletTree
 #[derive(Serialize, Deserialize)]
-pub struct WaveletTree<E> {
+pub struct WaveletTree<T> {
     //The alphabet of the sequence the tree is build from
-    alphabet: Vec<E>,
+    alphabet: Vec<T>,
     //the first node that holds a bitmap over the entire sequence
     root: Option<Box<BinNode>>,
 }
-///representation of the nodes in the tree, they are managed by the tree and the user has no direct access
+///representation of the nodes in the tree,
+///they are managed by the tree and the user has no direct access
 #[derive(Serialize, Deserialize)]
 struct BinNode {
     ///The bitmap stored in the node
@@ -50,9 +51,9 @@ struct BinNode {
     right: Option<Box<BinNode>>,
 }
 ///The Iterator for WaveletTrees
-pub struct Iterhelper<'de, E> {
+pub struct Iterhelper<'de, T> {
     position: usize,
-    tree: &'de WaveletTree<E>,
+    tree: &'de WaveletTree<T>,
 }
 
 impl<'de, T> WaveletTree<T>
@@ -61,7 +62,11 @@ where
 {
     /// creates a WaveletTree out of a given sequence
     /// * `sequence` - the sequence that is representet in the tree
-    pub fn create_tree<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
+    pub fn create<S: Clone + Iterator<Item = T>>(sequence: S) -> WaveletTree<T> {
+        let mut sequence = sequence.peekable();
+        if sequence.peek().is_none() {
+            panic!("Die übergebene Sequence ist leer!")
+        };
         let seqvec = sequence.clone().collect::<Vec<_>>();
         let mut alphabet: Vec<T> = Vec::new();
         alphabet.extend(sequence.unique());
@@ -183,24 +188,11 @@ where
     }
 
     ///Returns the lenght of the alphabet
-    pub fn alphabet_len(&self) -> usize{
+    pub fn alphabet_len(&self) -> usize {
         self.alphabet.len()
     }
 }
-///Implements a non-consuming Iterator for the WaveletTree
-impl<'de, T> IntoIterator for &'de WaveletTree<T>
-where
-    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
-{
-    type Item = T;
-    type IntoIter = Iterhelper<'de, T>;
-    fn into_iter(self) -> Self::IntoIter {
-        Iterhelper {
-            position: 0,
-            tree: self,
-        }
-    }
-}
+
 ///Implements the Index Trait to allow access with [index], since it uses the access function index starts at 1
 impl<'de, T> Index<usize> for WaveletTree<T>
 where
@@ -337,12 +329,26 @@ impl BinNode {
         self.value.bits().len()
     }
 }
-
-impl<'de, E> Iterator for Iterhelper<'de, E>
+///Implements a non-consuming Iterator for the WaveletTree
+impl<'de, T> IntoIterator for &'de WaveletTree<T>
 where
-    E: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
 {
-    type Item = E;
+    type Item = T;
+    type IntoIter = Iterhelper<'de, T>;
+    fn into_iter(self) -> Self::IntoIter {
+        Iterhelper {
+            position: 0,
+            tree: self,
+        }
+    }
+}
+
+impl<'de, T> Iterator for Iterhelper<'de, T>
+where
+    T: Hash + Clone + Ord + Debug + Copy + Serialize + Deserialize<'de>,
+{
+    type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.position += 1;
         let len = match self.tree.len() {

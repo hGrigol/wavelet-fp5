@@ -1,4 +1,4 @@
-﻿use bio::data_structures::rank_select::RankSelect;
+use bio::data_structures::rank_select::RankSelect;
 use bv::BitVec;
 use bv::BitsMut;
 use petgraph::graph::Graph;
@@ -9,18 +9,19 @@ use std::hash::Hash;
 use super::wavelet_tree_pointer::WaveletTree;
 
 
-
 #[derive(Debug, Snafu)]
 pub enum ErrorGraph {
-	#[snafu(display("Error occured when calling select_1 in ith_neighbor"))]
+    #[snafu(display("Error occured when calling select_1 in ith_neighbor"))]
     ErrorIthNeighbor1,
-	#[snafu(display("Error occured when calling access on adjaceny_list in ith_neighbor"))]
+    #[snafu(display("Error occured when calling access on adjaceny_list in ith_neighbor"))]
     ErrorIthNeighbor2,
-	#[snafu(display("v > number of nodes or i = 0"))]
+    #[snafu(display("v > number of nodes or i = 0"))]
     ErrorIndexOutOfBounds,
-	#[snafu(display("Error occured when calling select on adjaceny_list in ith_reverse_neighbor"))]
+    #[snafu(display(
+        "Error occured when calling select on adjaceny_list in ith_reverse_neighbor"
+    ))]
     ReverseNeighborDoesnotExist,
-	#[snafu(display("Error occured when calling rank_1 in ith_reverse_neighbor"))]
+    #[snafu(display("Error occured when calling rank_1 in ith_reverse_neighbor"))]
     ErrorIthReverseNeighbor2,
 	#[snafu(display("This neighbor does not exist, number of neighbors < i"))]
 	NeighborDoesnotExist,
@@ -34,13 +35,13 @@ pub enum ErrorGraph {
 	WeightError,
 }
 
-
-/// Representation of a directed or undirected graph. 
+/// Representation of a directed or undirected graph.
 /// All adjacency lists are concatenated and saved as a WaveletTree.  
-/// Indices are saved as Option of u64 starting with 0. 
-/// None is added as a Placeholder when a new adjaceny list is concatenated. 
-/// In the bitmap a true marks the beginning of a new adjaceny list 
+/// Indices are saved as `Option<u64>` starting with 0.
+/// None is added as a Placeholder when a new adjaceny list is concatenated.
+/// In the bitmap a true marks the beginning of a new adjaceny list
 /// (e.g. the fifth true bit marks the beginning of the adjaceny list of the node with index 5)
+#[derive(Serialize, Deserialize)]
 pub struct WaveletGraph<E>{
 	adjacency_list: WaveletTree<Option<u64>>,
 	bitmap: RankSelect,
@@ -86,7 +87,7 @@ where
 		//println!("adjacency_list: {:?}", adjaceny_vec);
 		//println!("bitmap: {:?}", bit_v);
 		//println!("weights: {:?}", weight_vec);
-		WaveletGraph{adjacency_list: WaveletTree::create_tree(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1), edge_weights: weight_vec}
+		WaveletGraph{adjacency_list: WaveletTree::create(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1), edge_weights: weight_vec}
 	}
 
 
@@ -165,5 +166,4 @@ where
 			None => return Err(ErrorGraph::WeightError),
 		}		
 	}
-
 }

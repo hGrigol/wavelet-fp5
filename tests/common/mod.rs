@@ -1,13 +1,14 @@
-﻿use wavelet5::WaveletTree;
-use wavelet5::WaveletGraph;
 use petgraph::Graph;
+use wavelet5::WaveletGraph;
+use wavelet5::WaveletTree;
+use wavelet5::WaveletTreePointerFree;
 
-pub fn setup_string1() -> WaveletTree<char>{
- wavelet5::WaveletTree::create_tree("Hallo Ich bin ein Test für einen Satz".chars().into_iter())   
+pub fn setup_string1() -> WaveletTree<char> {
+    wavelet5::WaveletTree::create("Hallo Ich bin ein Test für einen Satz".chars().into_iter())
 }
 
 pub fn setup_string() -> WaveletTree<char> {
-    wavelet5::WaveletTree::create_tree("AsWDaaaaa aGDW!/(%§".chars().into_iter())
+    wavelet5::WaveletTree::create("AsWDaaaaa aGDW!/(%§".chars().into_iter())
 }
 
 
@@ -25,13 +26,17 @@ pub fn setup_graph() -> WaveletGraph<u64>{
 	wavelet5::WaveletGraph::create_graph(deps)
 }
 
-
 pub fn setup_ints() -> WaveletTree<u64> {
     let mut vec = Vec::new();
     for x in 0..1000000 {
         vec.push(x % 30);
     }
-    wavelet5::WaveletTree::create_tree(vec.into_iter())
+    wavelet5::WaveletTree::create(vec.into_iter())
+}
+pub fn setup_string_2_2() -> WaveletTreePointerFree<char> {
+    wavelet5::WaveletTreePointerFree::create(
+        "Hallo Ich bin ein Test für einen Satz".chars().into_iter(),
+    )
 }
 
 pub fn setup_single_node() -> WaveletGraph<u64>{
@@ -60,3 +65,8 @@ pub fn setup_graph_weighted() -> WaveletGraph<u64>{
 	]);
 	wavelet5::WaveletGraph::create_graph(deps)
 }
+
+pub fn setup_string_2_1() -> WaveletTreePointerFree<char> {
+    wavelet5::WaveletTreePointerFree::create("AsWDaaaaa aGDW!/(%§".chars().into_iter())
+}
+
