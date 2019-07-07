@@ -41,6 +41,10 @@ pub enum ErrorGraph {
 /// None is added as a Placeholder when a new adjaceny list is concatenated.
 /// In the bitmap a true marks the beginning of a new adjaceny list
 /// (e.g. the fifth true bit marks the beginning of the adjaceny list of the node with index 5)
+/// Edge_weights are saved in a `Vec<Option<E>>`, None here is also a placeholder for the 
+/// starting point of the edge. The weight is saved at the postion of the ending node. So the weight of
+/// the edge between node 2 and 3 (3 beeing the first neighbor of 2) is at the first position after 
+/// the second None in the Vector.
 #[derive(Serialize, Deserialize)]
 pub struct WaveletGraph<E>{
 	adjacency_list: WaveletTree<Option<u64>>,
@@ -55,7 +59,8 @@ where
 
 {
 
-	/// Creates a representation of a given petgraph as a WaveletTree and a bitmap.
+	/// Creates a representation of a given petgraph as a `WaveletTree`, a `RankSelect` 
+	/// and a `Vec<Option<E>>`.
 	pub fn create_graph<N>(graph: Graph<N,E>) -> WaveletGraph<E>{
 		let mut i = 0; //Variable for setting the bits
 		let nodes = graph.node_count();
@@ -63,7 +68,7 @@ where
 		let mut bit_v = BitVec::new_fill(false,len_vec as u64);
 		let mut adjaceny_vec = Vec::with_capacity(len_vec);
 		let mut weight_vec = Vec::with_capacity(len_vec);
-		//Creating adjacency_list and bitmap
+		//Creating adjacency_list, bitmap and edge_weights
 		for node_a in graph.node_indices() {
 			bit_v.set_bit(i, true);
 			weight_vec.push(None);
@@ -84,9 +89,6 @@ where
 			neighbors.reverse();
 			adjaceny_vec.append(&mut neighbors);
 		}
-		//println!("adjacency_list: {:?}", adjaceny_vec);
-		//println!("bitmap: {:?}", bit_v);
-		//println!("weights: {:?}", weight_vec);
 		WaveletGraph{adjacency_list: WaveletTree::create(adjaceny_vec.into_iter()), bitmap: RankSelect::new(bit_v,1), edge_weights: weight_vec}
 	}
 
