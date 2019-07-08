@@ -27,8 +27,8 @@ pub enum ErrorGraph {
 	NeighborDoesnotExist,
 	#[snafu(display("Try to access placeholder"))]
 	AccessPlaceholder,	
-	#[snafu(display("Error occured when calling select_1 in which_neighbor"))]
-	WhichNeighborError,
+	#[snafu(display("Position of v could not be found"))]
+	PositionNotFound,
 	#[snafu(display("The given i is no neighbor of v"))]
 	IsNoNeighbor,
 	#[snafu(display("Error while trying to get the weight"))]
@@ -137,7 +137,7 @@ where
 		ErrorIndexOutOfBounds);
 		let postion_v = match self.bitmap.select_1((v+1) as u64) {
 			Some(x) => x,
-			None => return Err(ErrorGraph::WhichNeighborError),
+			None => return Err(ErrorGraph::PositionNotFound),
 		};
 		let cutoff = match self.bitmap.select_1((v + 2) as u64) {
             Some(x) => x,
@@ -157,7 +157,7 @@ where
 		ErrorIndexOutOfBounds);
 		let postion_v = match self.bitmap.select_1((v+1) as u64) {
 			Some(x) => x,
-			None => return Err(ErrorGraph::WhichNeighborError),
+			None => return Err(ErrorGraph::PositionNotFound),
 		};
 		let neighbor = match self.which_neighbor(v,i){
 			Ok(x) => x,
@@ -167,5 +167,24 @@ where
 			Some(x) => return Ok(x),
 			None => return Err(ErrorGraph::WeightError),
 		}		
+	}
+	
+	/// Returns the neighbors of v, returns empty `Vector` if no neighbors exist
+	pub fn get_neighbors(&self, v: usize) -> Result<Vec<u64>, ErrorGraph> {
+		ensure!(self.adjacency_list.alphabet_len() > v,
+		ErrorIndexOutOfBounds);
+		let postion_v = match self.bitmap.select_1((v+1) as u64) {
+			Some(x) => x,
+			None => return Err(ErrorGraph::PositionNotFound),
+		};
+		let cutoff = match self.bitmap.select_1((v + 2) as u64) {
+            Some(x) => x,
+            None => self.bitmap.bits().len(),
+        };
+		let mut neighbors_vec = Vec::new();
+		for number in postion_v+2..cutoff+1 {
+			neighbors_vec.push(self.adjacency_list[number as usize].unwrap());		
+		}
+		Ok(neighbors_vec)
 	}
 }

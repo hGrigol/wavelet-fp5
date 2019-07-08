@@ -98,9 +98,32 @@ fn testing_get_weights(){
 
 #[test]
 fn testing_serialize() {
-    let graph = common::setup_graph();
-    let serialized = serde_json::to_string(&graph).unwrap();
-    let _graph2: WaveletGraph<u64> = serde_json::from_str(&serialized).unwrap();
-    assert!(matches!(graph, _graph2));
+    let graph_unweighted = common::setup_graph();
+	let graph = common::setup_graph_weighted();
+    let serialized_unweighted = serde_json::to_string(&graph_unweighted).unwrap();
+	let serialized = serde_json::to_string(&graph).unwrap();
+    let _graph2: WaveletGraph<u64> = serde_json::from_str(&serialized_unweighted).unwrap();
+	let _graph3: WaveletGraph<u64> = serde_json::from_str(&serialized).unwrap();
+    assert!(matches!(graph_unweighted, _graph2));
+	assert!(matches!(graph, _graph3));
 
+}
+
+#[test]
+fn testing_get_neighbors() {
+	let graph_unweighted = common::setup_graph();
+	let graph = common::setup_graph_weighted();
+	let mut test_vec = Vec::new();
+	test_vec.push(1);
+	test_vec.push(2);
+	let mut test_vec2 = Vec::new();
+	test_vec2.push(4);
+	let mut empty_vec: Vec<u64> = Vec::new();
+	assert!(matches!(graph_unweighted.get_neighbors(0).unwrap(), test_vec));
+	assert!(matches!(graph.get_neighbors(0).unwrap(), test_vec));
+	assert!(matches!(graph_unweighted.get_neighbors(3).unwrap(), test_vec2));
+	assert!(matches!(graph.get_neighbors(3).unwrap(), test_vec2));
+	assert!(matches!(graph_unweighted.get_neighbors(1).unwrap(), empty_vec));
+	assert!(matches!(graph.get_neighbors(1).unwrap(), empty_vec));
+	assert!(matches!(graph.get_neighbors(8),Err(ErrorGraph::ErrorIndexOutOfBounds)));
 }
